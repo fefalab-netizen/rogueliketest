@@ -1,5 +1,5 @@
-import {flipForAim} from './facing.js?v=3.2';
-import {move,canOccupy,TILE} from './world.js?v=3.2';
+import {flipForAim,facingAngle} from './facing.js?v=4.0';
+import {move,canOccupy,TILE} from './world.js?v=4.0';
 export const weapons=[
  {kind:'melee',cooldown:.55,range:55,arc:1.2,fx:10,special:'Wide axe sweep'},
  {kind:'melee',cooldown:.4,range:52,arc:.95,fx:0,special:'Heavy armor'},
@@ -28,7 +28,7 @@ export function enemyHitDistance(point,enemy){
 }
 export class Combat {
  constructor(world,player,hero){this.world=world;this.player=player;this.hero=hero;this.weapon=weapons[hero.id];Object.assign(player,{hp:hero.hp,xp:0,cooldown:0,dodge:0,dodgeCooldown:0,invulnerable:0,flash:0,angle:0});this.enemies=[];this.projectiles=[];this.effects=[];this.numbers=[];this.kills=0;this.time=0;this.started=false;this.finished=false;this.randomState=127;}
- start(){if(this.started)return;this.started=true;const positions=[[12,12,0],[9,15,3],[15,7,1],[25,13,4],[29,10,5],[31,17,2]];this.enemies=positions.map(([x,y,type],id)=>({...enemyTypes[type],maxHp:enemyTypes[type].hp,id,x:(x+.5)*32,y:(y+.5)*32,radius:8,state:'idle',timer:0,cooldown:1,flash:0,slow:0,alert:false,angle:0,pathTimer:0,waypoint:null}));}
+ start(){if(this.started)return;this.started=true;const positions=this.world.enemySpawns||[[12,12,0],[9,15,3],[15,7,1],[25,13,4],[29,10,5],[31,17,2]];this.enemies=positions.map(([x,y,type],id)=>({...enemyTypes[type],maxHp:enemyTypes[type].hp,id,x:(x+.5)*32,y:(y+.5)*32,radius:8,state:'idle',timer:0,cooldown:1,flash:0,slow:0,alert:false,angle:0,pathTimer:0,waypoint:null}));}
  random(){this.randomState=(Math.imul(this.randomState,1664525)+1013904223)>>>0;return this.randomState/4294967296;}
  effect(sheet,cell,x,y,size=36,angle=0,duration=.24){this.effects.push({sheet,cell,x,y,size,angle,ttl:duration,duration});}
  number(text,x,y,color='#f2deaf'){this.numbers.push({text,x,y,color,ttl:.8});}
@@ -42,7 +42,7 @@ export class Combat {
  waypoint(enemy){const w=this.world,p=this.player,sx=Math.floor(enemy.x/32),sy=Math.floor(enemy.y/32),tx=Math.floor(p.x/32),ty=Math.floor(p.y/32),start=sy*w.width+sx,target=ty*w.width+tx;const queue=[start],previous=new Map([[start,-1]]);for(let i=0;i<queue.length&&!previous.has(target);i++){const n=queue[i],x=n%w.width,y=Math.floor(n/w.width);for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=ny*w.width+nx;if(nx<0||ny<0||nx>=w.width||ny>=w.height||previous.has(k)||w.solid[k])continue;previous.set(k,n);queue.push(k);}}if(!previous.has(target)||target===start)return {x:p.x,y:p.y};let n=target;while(previous.get(n)!==start&&previous.get(n)!==-1)n=previous.get(n);return {x:(n%w.width+.5)*32,y:(Math.floor(n/w.width)+.5)*32};}
  update(dt,input){this.time+=dt;const p=this.player;
   for(const key of ['cooldown','dodgeCooldown','invulnerable','flash'])p[key]=Math.max(0,p[key]-dt);
-  if(input.angle!==undefined)p.angle=input.angle;
+  p.angle=facingAngle(input,p.angle);
   if(input.dodge)this.dodge(input.x,input.y);
   if(p.dodge>0){move(this.world,p,p.dodgeX*420*dt,p.dodgeY*420*dt);p.dodge=Math.max(0,p.dodge-dt);}else move(this.world,p,input.x*this.hero.speed*dt,input.y*this.hero.speed*dt);
   p.flip=flipForAim(p.angle);if(input.attack)this.attack();
@@ -51,8 +51,8 @@ export class Combat {
    if(e.state==='recover'){e.timer-=dt;if(e.timer<=0)e.state='chase';continue;}
    const range=e.kind==='melee'?35:210;
    if(d<range&&visible&&e.cooldown===0){e.state='attack';e.timer=e.kind==='melee'?.48:.7;e.angle=Math.atan2(p.y-e.y,p.x-e.x);continue;}
-   let target=p,sign=1;e.state='chase';if(!visible){if(e.pathTimer<=0||!e.waypoint||distance(e,e.waypoint)<5){e.waypoint=this.waypoint(e);e.pathTimer=.3;}target=e.waypoint;}else if(e.kind!=='melee'&&d<115){sign=-1;e.state='retreat';}else if(e.kind!=='melee'&&d<185){continue;}
-   const a=Math.atan2(target.y-e.y,target.x-e.x);e.angle=a;const speed=e.speed*(e.slow>0?.5:1);move(this.world,e,Math.cos(a)*speed*sign*dt,Math.sin(a)*speed*sign*dt);
+   let target=p,sign=1;e.state='chase';if(!visible){if(e.pathTimer<=0||!e.waypoint||distance(e,e.waypoint)<5){e.waypoint=this.waypoint(e);e.pathTimer=.3;}target=e.waypoint;}else if(e.kind!=='melee'&&d<115){sign=-1;e.state='retreat';}else if(e.kind!=='melee'&&d<185){e.angle=Math.atan2(p.y-e.y,p.x-e.x);continue;}
+   const a=Math.atan2(target.y-e.y,target.x-e.x);e.angle=a+(sign<0?Math.PI:0);const speed=e.speed*(e.slow>0?.5:1);move(this.world,e,Math.cos(a)*speed*sign*dt,Math.sin(a)*speed*sign*dt);
   }
   // Separate living bodies without forcing either body into a wall.
   const bodies=[p,...this.enemies.filter(e=>e.hp>0)];for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){const a=bodies[i],b=bodies[j],d=distance(a,b);if(d<16){const angle=d?Math.atan2(b.y-a.y,b.x-a.x):0,push=(16-d)/2;move(this.world,a,-Math.cos(angle)*push,-Math.sin(angle)*push);move(this.world,b,Math.cos(angle)*push,Math.sin(angle)*push);}}
