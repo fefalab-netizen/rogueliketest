@@ -1,4 +1,5 @@
-import {move,canOccupy,TILE} from './world.js';
+import {flipForAim} from './facing.js?v=3.1';
+import {move,canOccupy,TILE} from './world.js?v=3.1';
 export const weapons=[
  {kind:'melee',cooldown:.55,range:55,arc:1.2,fx:10,special:'Wide axe sweep'},
  {kind:'melee',cooldown:.4,range:52,arc:.95,fx:0,special:'Heavy armor'},
@@ -38,7 +39,7 @@ export class Combat {
   if(input.angle!==undefined)p.angle=input.angle;
   if(input.dodge)this.dodge(input.x,input.y);
   if(p.dodge>0){move(this.world,p,p.dodgeX*420*dt,p.dodgeY*420*dt);p.dodge=Math.max(0,p.dodge-dt);}else move(this.world,p,input.x*this.hero.speed*dt,input.y*this.hero.speed*dt);
-  p.flip=Math.cos(p.angle)<0;if(input.attack)this.attack();
+  p.flip=flipForAim(p.angle);if(input.attack)this.attack();
   for(const e of this.enemies){if(e.hp<=0)continue;e.cooldown=Math.max(0,e.cooldown-dt);e.flash=Math.max(0,e.flash-dt);e.slow=Math.max(0,e.slow-dt);e.pathTimer-=dt;const d=distance(e,p),visible=lineClear(this.world,e,p);if(d<260&&visible)e.alert=true;if(!e.alert){e.state='idle';continue;}
    if(e.state==='attack'){e.timer-=dt;if(e.timer<=0){if(e.kind==='melee'){const a=Math.atan2(p.y-e.y,p.x-e.x);if(distance(e,p)<44&&Math.cos(a-e.angle)>.35&&lineClear(this.world,e,p))this.hurt(e.damage,e);}else this.shoot(e,e.angle,e.kind,e.damage,'enemy',e.kind==='arrow'?190:135);e.state='recover';e.timer=.42;e.cooldown=e.kind==='melee'?.7:1.4;}continue;}
    if(e.state==='recover'){e.timer-=dt;if(e.timer<=0)e.state='chase';continue;}
@@ -54,4 +55,6 @@ export class Combat {
   this.finished=this.started&&this.enemies.every(e=>e.hp<=0);
  }
 }
+
+
 

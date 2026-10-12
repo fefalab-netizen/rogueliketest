@@ -1,4 +1,4 @@
-import {sheets} from './data.js';
+import {sheets} from './data.js?v=3.1';
 
 export function gridLines(size) {return Array.from({length:5},(_,i)=>Math.round(size*i/4));}
 function findGutters(profile) {
@@ -69,3 +69,4 @@ export class AssetManager {
     this.draw(g,'01',cell,x-width/2,feet-size,width,size,flip);
   }
 }
+

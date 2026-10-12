@@ -1,9 +1,10 @@
-import {AssetManager} from './assets.js';
-import {classes,art} from './data.js';
-import {TILE,createTestRoom,move,direction} from './world.js';
-import {Combat,weapons,lineClear} from './combat.js';
-import {Progression,xpNeeded,colors} from './progression.js';
-import {openInventory} from './inventory.js';
+import {flipForAim} from './facing.js?v=3.1';
+import {AssetManager} from './assets.js?v=3.1';
+import {classes,art} from './data.js?v=3.1';
+import {TILE,createTestRoom,move,direction} from './world.js?v=3.1';
+import {Combat,weapons,lineClear} from './combat.js?v=3.1';
+import {Progression,xpNeeded,colors} from './progression.js?v=3.1';
+import {openInventory} from './inventory.js?v=3.1';
 
 const $=id=>document.getElementById(id),canvas=$('game'),g=canvas.getContext('2d');
 const assets=new AssetManager(),world=createTestRoom(),keys=new Set();
@@ -12,7 +13,11 @@ const player={...world.spawn,radius:8,flip:false};
 let combat=new Combat(world,player,classes[0]),attacking=false,dodgeRequested=false;
 let progression=new Progression(classes[0],player),toastTime=0;
 function notifyLoot(message){$('toast').textContent=message;$('toast').hidden=false;toastTime=3.5;}
-function showGear(character=false){if(mode!=='playing')return;setMode('inventory');openInventory(progression,assets,character);}
+function showGear(character=false){if(!['playing','paused'].includes(mode))return;setMode('inventory');try{openInventory(progression,assets,character);}catch(error){setMode('paused');reportError(error);}}
+function drinkPotion(){if(!['playing','paused'].includes(mode))return;if(progression.usePotion()){notifyLoot('Healed to '+player.hp+' / '+progression.stats.hp+' HP');}else notifyLoot(progression.potions?'Health is already full.':'No potions remaining.');syncVitals();}
+function syncVitals(){$('healthText').textContent=player.hp+' / '+progression.stats.hp+' HP';document.querySelector('.health span').style.width=(player.hp/progression.stats.hp*100)+'%';}
+function reportError(error){$('fatal').hidden=false;$('fatal').textContent='Game error: '+error.message;}
+addEventListener('error',event=>reportError(event.error||new Error(event.message)));
 function encounter(){if(combat.finished){combat.started=false;combat.finished=false;combat.projectiles=[];progression.wave++;}combat.start();canvas.focus();}
 const pointer={x:innerWidth/2+100,y:innerHeight/2};
 canvas.addEventListener('pointermove',e=>{pointer.x=e.clientX;pointer.y=e.clientY;});
@@ -30,12 +35,13 @@ $('begin').onclick=begin;$('pauseButton').onclick=()=>setMode('paused');$('resum
 $('reset').textContent='Restart combat trial';$('reset').onclick=begin;
 $('retry').onclick=begin;$('resultChange').onclick=()=>setMode('selection');
 $('encounter').onclick=encounter;
+$('potionButton').onclick=drinkPotion;
 $('inventoryButton').onclick=()=>showGear();$('characterButton').onclick=()=>showGear(true);
 $('gear').addEventListener('close',()=>{if(mode==='inventory')setMode('playing');});
 const movementCodes=['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowLeft','ArrowDown','ArrowRight'];
 addEventListener('keydown',e=>{
   if($('info').open||$('gear').open)return;
-  if(mode==='playing'&&!e.repeat&&['KeyI','KeyC','Digit1'].includes(e.code)){e.preventDefault();if(e.code==='Digit1'){if(progression.usePotion())notifyLoot('Healing potion used.');}else showGear(e.code==='KeyC');return;}
+  if(['playing','paused'].includes(mode)&&!e.repeat&&['KeyI','KeyC','Digit1','Numpad1'].includes(e.code)){e.preventDefault();if(['Digit1','Numpad1'].includes(e.code))drinkPotion();else showGear(e.code==='KeyC');return;}
   if(e.code==='F3'){e.preventDefault();if(!e.repeat){debug=!debug;$('debug').hidden=!debug||mode==='selection';}return;}
   if(e.code==='Escape'&&!e.repeat&&['playing','paused'].includes(mode)){e.preventDefault();setMode(mode==='playing'?'paused':'playing');return;}
   if(mode==='playing'&&e.code==='Space'){e.preventDefault();if(!e.repeat)dodgeRequested=true;return;}
@@ -82,7 +88,7 @@ function render(){
   sprites.push({depth:player.y+8,draw:()=>{g.fillStyle='#050b0bb0';g.beginPath();g.ellipse(Math.round(player.x+ox),Math.round(player.y+oy+5),12,5,0,0,Math.PI*2);g.fill();assets.character(g,classes[selected].frames[Math.floor(animation/.42)%2],player.x+ox,player.y+oy+8,42,player.flip);}});
   for(const e of combat.enemies){if(e.hp<=0)continue;sprites.push({depth:e.y+8,draw:()=>{
     const x=Math.round(e.x+ox),y=Math.round(e.y+oy),a=assets.atlases.get('02'),b=a?.frames[e.frame].bounds,ratio=b?(b.right-b.left+1)/(b.bottom-b.top+1):1;
-    g.save();if(e.flash>0)g.globalAlpha=.45;assets.draw(g,'02',e.frame+Math.floor(animation/.42)%2,x-21*ratio,y-34,42*ratio,42,Math.cos(e.angle)<0);g.restore();
+    g.save();if(e.flash>0)g.globalAlpha=.45;assets.draw(g,'02',e.frame+Math.floor(animation/.42)%2,x-21*ratio,y-34,42*ratio,42,flipForAim(e.angle));g.restore();
     g.fillStyle='#321b22';g.fillRect(x-17,y-43,34,4);g.fillStyle='#cd6958';g.fillRect(x-17,y-43,34*e.hp/e.maxHp,4);
     if(e.state==='attack'){g.strokeStyle='#ffb769';g.lineWidth=2;g.beginPath();if(e.kind==='melee')g.arc(x,y,40,e.angle-.95,e.angle+.95);else{g.moveTo(x,y);g.lineTo(x+Math.cos(e.angle)*80,y+Math.sin(e.angle)*80);}g.stroke();g.fillStyle='#ffe0a3';g.font='bold 13px monospace';g.fillText('!',x-3,y-49);}
     if(debug){g.strokeStyle='#ff9b74';g.strokeRect(x-8,y-8,16,16);g.font='8px monospace';g.fillText(e.state,x-15,y+19);}
@@ -106,6 +112,8 @@ try {
 }catch(error){$('fatal').hidden=false;$('fatal').textContent=`Unable to start: ${error.message}. Run the local server and open /game/.`;}
 // Read-only inspection for acceptance tests and future development tools.
 window.__descent={snapshot:()=>({mode,selected,player:{...player},camera:{...camera},loaded:assets.atlases.size,errors:[...assets.errors],frame:Math.floor(animation/.42)%2,debug}),assetReport:()=>[...assets.atlases].map(([id,a])=>({id,width:a.width,height:a.height,transparent:a.transparent,xLines:a.xLines,yLines:a.yLines}))};
+
+
 
 
 

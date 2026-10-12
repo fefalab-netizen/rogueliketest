@@ -1,4 +1,4 @@
-import {rarities,colors,xpNeeded} from './progression.js';
+import {rarities,colors,xpNeeded} from './progression.js?v=3.1';
 const labels={hp:'Max HP',attack:'Power',defense:'Defense',speed:'Speed',crit:'Critical chance',haste:'Attack speed'};
 const value=(key,n)=>['crit','haste'].includes(key)?`${Math.round(n*100)}%`:n;
 export function openInventory(progression,assets,characterOnly=false){
@@ -15,3 +15,4 @@ export function openInventory(progression,assets,characterOnly=false){
  function details(){const p=progression,item=p.items.find(i=>i.id===selected);if(!item)return;const current=p.equipment[item.slot],keys=new Set([...Object.keys(item.stats),...Object.keys(current?.stats||{})]);const el=document.getElementById('itemDetails');el.innerHTML=`<h3 style="color:${colors[item.rarity]}">${item.name}</h3><p>${rarities[item.rarity]} · ${item.slot} · Compatible with your class</p><p>Compared with ${current?.name||'base gear'}:</p>${[...keys].map(k=>{const delta=(item.stats[k]||0)-(current?.stats[k]||0);return `<p>${labels[k]}: +${value(k,item.stats[k]||0)} <b style="color:${delta>=0?'#8bdd9d':'#ff9786'}">(${delta>=0?'+':''}${value(k,delta)})</b></p>`;}).join('')}<button id="equipItem">Equip</button>`;document.getElementById('equipItem').disabled=current?.id===item.id;document.getElementById('equipItem').onclick=()=>{p.equip(item.id);draw();};}
  draw();dialog.showModal();
 }
+

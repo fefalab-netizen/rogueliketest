@@ -32,3 +32,4 @@ export function direction(keys) {
   const length=Math.hypot(x,y)||1;
   return {x:x/length,y:y/length};
 }
+

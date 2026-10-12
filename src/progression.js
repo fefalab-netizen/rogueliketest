@@ -16,3 +16,4 @@ export class Progression {
  drop(enemy,kill){const slot=kill===1?'weapon':['weapon','armor','trinket'][(kill-1)%3];this.drops.push({x:enemy.x,y:enemy.y,item:this.makeItem(slot,kill===1),gold:5+Math.floor(this.random()*9),potions:kill%2===1?1:0});}
  collect(player,clear){const found=[];this.drops=this.drops.filter(d=>{if(Math.hypot(d.x-player.x,d.y-player.y)>30||!clear(player,d))return true;this.items.push(d.item);this.gold+=d.gold;this.potions+=d.potions;found.push(d.item);return false;});return found;}
 }
+
