@@ -1,10 +1,10 @@
-import {flipForAim} from './facing.js?v=3.1';
-import {AssetManager} from './assets.js?v=3.1';
-import {classes,art} from './data.js?v=3.1';
-import {TILE,createTestRoom,move,direction} from './world.js?v=3.1';
-import {Combat,weapons,lineClear} from './combat.js?v=3.1';
-import {Progression,xpNeeded,colors} from './progression.js?v=3.1';
-import {openInventory} from './inventory.js?v=3.1';
+import {flipForAim} from './facing.js?v=3.2';
+import {AssetManager} from './assets.js?v=3.2';
+import {classes,art} from './data.js?v=3.2';
+import {TILE,createTestRoom,move,direction} from './world.js?v=3.2';
+import {Combat,weapons,lineClear} from './combat.js?v=3.2';
+import {Progression,xpNeeded,colors} from './progression.js?v=3.2';
+import {openInventory} from './inventory.js?v=3.2';
 
 const $=id=>document.getElementById(id),canvas=$('game'),g=canvas.getContext('2d');
 const assets=new AssetManager(),world=createTestRoom(),keys=new Set();
@@ -85,16 +85,15 @@ function render(){
   for(const p of world.props)sprites.push({depth:(p.y+1)*TILE,draw:()=>assets.draw(g,art.props,p.cell,p.x*TILE+ox,p.y*TILE+oy-6,32,38)});
   // Torch artwork is decorative, mounted above the north boundary.
   for(const x of [5,15,25,33])sprites.push({depth:32,draw:()=>assets.draw(g,art.props,0,x*TILE+ox,oy-8,20,32)});
-  sprites.push({depth:player.y+8,draw:()=>{g.fillStyle='#050b0bb0';g.beginPath();g.ellipse(Math.round(player.x+ox),Math.round(player.y+oy+5),12,5,0,0,Math.PI*2);g.fill();assets.character(g,classes[selected].frames[Math.floor(animation/.42)%2],player.x+ox,player.y+oy+8,42,player.flip);}});
+  sprites.push({depth:player.y+8,draw:()=>{g.fillStyle='#050b0bb0';g.beginPath();g.ellipse(Math.round(player.x+ox),Math.round(player.y+oy+5),12,5,0,0,Math.PI*2);g.fill();g.save();if(player.flash>0)g.globalAlpha=.5;assets.character(g,classes[selected].frames[Math.floor(animation/.42)%2],player.x+ox,player.y+oy+8,42,player.flip);g.restore();}});
   for(const e of combat.enemies){if(e.hp<=0)continue;sprites.push({depth:e.y+8,draw:()=>{
     const x=Math.round(e.x+ox),y=Math.round(e.y+oy),a=assets.atlases.get('02'),b=a?.frames[e.frame].bounds,ratio=b?(b.right-b.left+1)/(b.bottom-b.top+1):1;
     g.save();if(e.flash>0)g.globalAlpha=.45;assets.draw(g,'02',e.frame+Math.floor(animation/.42)%2,x-21*ratio,y-34,42*ratio,42,flipForAim(e.angle));g.restore();
     g.fillStyle='#321b22';g.fillRect(x-17,y-43,34,4);g.fillStyle='#cd6958';g.fillRect(x-17,y-43,34*e.hp/e.maxHp,4);
     if(e.state==='attack'){g.strokeStyle='#ffb769';g.lineWidth=2;g.beginPath();if(e.kind==='melee')g.arc(x,y,40,e.angle-.95,e.angle+.95);else{g.moveTo(x,y);g.lineTo(x+Math.cos(e.angle)*80,y+Math.sin(e.angle)*80);}g.stroke();g.fillStyle='#ffe0a3';g.font='bold 13px monospace';g.fillText('!',x-3,y-49);}
-    if(debug){g.strokeStyle='#ff9b74';g.strokeRect(x-8,y-8,16,16);g.font='8px monospace';g.fillText(e.state,x-15,y+19);}
+    if(debug){g.strokeStyle='#ff9b74';g.strokeRect(x-14,y-34,28,42);g.font='8px monospace';g.fillText(e.state,x-15,y+19);}
   }});}
   sprites.sort((a,b)=>a.depth-b.depth).forEach(s=>s.draw());
-  if(player.invulnerable>0){g.strokeStyle=player.dodge>0?'#a9e5ff':'#ffad94';g.strokeRect(Math.round(player.x+ox-16),Math.round(player.y+oy-35),32,44);}
   for(const q of combat.projectiles){const x=Math.round(q.x+ox),y=Math.round(q.y+oy);g.save();g.translate(x,y);g.rotate(q.angle);if(q.kind==='bomb')assets.draw(g,'88',7,-8,-8,16,16);else if(q.kind==='magic')assets.draw(g,'100',q.team==='enemy'?12:2,-9,-9,18,18);else{g.fillStyle=q.team==='enemy'?'#f58b62':'#e3d4a8';g.fillRect(-8,-1,14,2);g.fillRect(4,-3,3,6);}g.restore();}
   for(const e of combat.effects){g.save();g.translate(Math.round(e.x+ox),Math.round(e.y+oy));g.rotate(e.angle);g.globalAlpha=Math.min(1,e.ttl*8);assets.draw(g,e.sheet,e.cell+(e.ttl<e.duration/2?1:0),-e.size/2,-e.size/2,e.size,e.size);g.restore();}
   for(const n of combat.numbers){g.globalAlpha=Math.min(1,n.ttl*3);g.font='bold 11px monospace';g.textAlign='center';g.fillStyle='#101316';g.fillText(n.text,Math.round(n.x+ox)+1,Math.round(n.y+oy)+1);g.fillStyle=n.color;g.fillText(n.text,Math.round(n.x+ox),Math.round(n.y+oy));}g.globalAlpha=1;g.textAlign='start';
