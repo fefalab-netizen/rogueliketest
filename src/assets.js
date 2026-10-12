@@ -1,4 +1,4 @@
-import {sheets} from './data.js?v=4.0';
+import {sheets} from './data.js?v=5.0';
 
 export function gridLines(size) {return Array.from({length:5},(_,i)=>Math.round(size*i/4));}
 function findGutters(profile) {
