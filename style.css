@@ -5,3 +5,4 @@
 #game{cursor:url("assets/aim-cursor.svg") 20 20,crosshair}#toast{z-index:10}#fatal{z-index:20}
 
 .seed-options{display:flex;justify-content:center;align-items:center;gap:12px;margin:16px;font:13px system-ui}.seed-options input{background:#171e20;color:#eee0c6;border:1px solid #71674e;padding:10px;width:180px}
+#story{max-width:640px;max-height:80vh;overflow:auto;color:#e9dec7;background:#162024;border:1px solid #977b51;padding:28px}#story button{display:block;margin:10px 0}#questObjective{color:#e9c67d;font-size:12px;max-width:360px}#debugSpeed{position:fixed;bottom:48px;right:18px;background:#432550;color:#ffe5a4;padding:10px;z-index:8;font:12px monospace}
