@@ -13,7 +13,7 @@ export class Progression {
  improve(stat){if(!this.points||!['attack','defense','hp'].includes(stat))return false;this.points--;this.bonus[stat]+=stat==='hp'?12:stat==='attack'?3:2;this.recalculate();return true;}
  usePotion(){if(!this.potions||this.player.hp<=0||this.player.hp>=this.stats.hp)return false;this.potions--;this.player.hp=Math.min(this.stats.hp,this.player.hp+Math.round(this.stats.hp*.4));return true;}
  makeItem(slot,guaranteed=false){const roll=this.random(),rarity=guaranteed?1:roll<.5?0:roll<.8?1:roll<.96?2:3,power=1+rarity+Math.floor((this.wave-1)/2);const stats=slot==='weapon'?{attack:4*power}:slot==='armor'?{defense:2*power,hp:6*power}:{crit:.02*power,haste:.04*power};return {id:++this.serial,slot,rarity,stats,name:`${rarities[rarity]} ${slot==='weapon'?weaponNames[this.base.id]:slot==='armor'?'Armor':'Sun Charm'}`,sheet:slot==='weapon'?'86':slot==='armor'?'87':'98',cell:slot==='weapon'?weaponIcons[this.base.id]:slot==='armor'?8:3};}
- drop(enemy,kill){const slot=kill===1?'weapon':['weapon','armor','trinket'][(kill-1)%3];this.drops.push({x:enemy.x,y:enemy.y,item:this.makeItem(slot,kill===1),gold:5+Math.floor(this.random()*9),potions:kill%2===1?1:0});}
+ drop(enemy,kill){const slot=kill===1?'weapon':['weapon','armor','trinket'][(kill-1)%3];this.drops.push({x:enemy.x,y:enemy.y,item:this.makeItem(slot,kill===1||enemy.tier==='elite'),gold:Math.round((5+Math.floor(this.random()*9))*(enemy.reward||1)*(enemy.loot?.gold||1)),potions:kill%2===1?1:0});}
  collect(player,clear){const found=[];this.drops=this.drops.filter(d=>{if(Math.hypot(d.x-player.x,d.y-player.y)>30||!clear(player,d))return true;this.items.push(d.item);this.gold+=d.gold;this.potions+=d.potions;found.push(d.item);return false;});return found;}
 }
 

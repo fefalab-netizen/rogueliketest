@@ -1,4 +1,5 @@
-import {sheets} from './data.js?v=5.0';
+import {coreSheets} from './sprite-usage.js?v=6.0';
+import {sheets} from './data.js?v=6.0';
 
 export function gridLines(size) {return Array.from({length:5},(_,i)=>Math.round(size*i/4));}
 function findGutters(profile) {
@@ -16,11 +17,11 @@ function findGutters(profile) {
 }
 export class AssetManager {
   constructor(){this.atlases=new Map();this.errors=[];}
-  async load(onProgress=()=>{}) {
+  async load(onProgress=()=>{},ids=coreSheets) {
     let done=0;
-    await Promise.all(sheets.map(async sheet=>{
-      try {await this.loadSheet(sheet);} catch(error){this.errors.push(`${sheet.path}: ${error.message}`);}
-      onProgress(++done,sheets.length);
+    await Promise.all(sheets.filter(s=>ids.includes(s.id)).map(async sheet=>{
+      try {if(!this.atlases.has(sheet.id))await this.loadSheet(sheet);} catch(error){this.errors.push(`${sheet.path}: ${error.message}`);}
+      onProgress(++done,ids.length);
     }));
   }
   async loadSheet(sheet) {
