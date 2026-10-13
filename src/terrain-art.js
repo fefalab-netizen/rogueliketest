@@ -1,4 +1,4 @@
-import {noise} from './geography.js?v=7.5';
+import {noise} from './geography.js?v=7.5.1';
 const groundCells=[[0,2,3,4,6,7,12,13,15],[0,1,2,3,6,7,8,9,10,11,12,13,14,15],[0,1,2,3,4,5,7,12,13,14,15],[0,1,13,14,15]];
 export function outdoorTile(w,x,y){
  const i=y*w.width+x,t=w.terrain[i];
@@ -6,9 +6,16 @@ export function outdoorTile(w,x,y){
  const biome=w.biomes[i],sheet=['103','105','107','109'][biome],v=w.variants[i];
  if(t===3)return ['101',8];
  if(t===2)return biome===1?['82',1]:[sheet,biome===0?8:biome===2?6:3];
- if(t===1)return [sheet,[7,4,7,1][biome]];
+ if(t===1)return [sheet,[7,4,7,0][biome]];
  const water=(dx,dy)=>w.terrain[(y+dy)*w.width+x+dx]===2;
- if(biome===3){const north=water(0,-1),south=water(0,1),west=water(-1,0),east=water(1,0);if(north&&west)return [sheet,8];if(north&&east)return [sheet,9];if(south&&west)return [sheet,10];if(south&&east)return [sheet,11];if(north)return [sheet,4];if(east)return [sheet,5];if(south)return [sheet,6];if(west)return [sheet,7];}
+ if(biome===3){
+  const north=water(0,-1),south=water(0,1),west=water(-1,0),east=water(1,0);
+  if(north&&west)return [sheet,8];if(north&&east)return [sheet,9];if(south&&west)return [sheet,10];if(south&&east)return [sheet,11];
+  if(north)return [sheet,4];if(east)return [sheet,5];if(south)return [sheet,6];if(west)return [sheet,7];
+  // Broad uninterrupted sand; wet sand belongs only behind the surf.
+  if(water(0,-2)||water(0,2)||water(-2,0)||water(2,0))return [sheet,1];
+  return [sheet,0];
+ }
  if(biome===0&&water(-1,0))return [sheet,10];
  return [sheet,groundCells[biome][v%groundCells[biome].length]];
 }
