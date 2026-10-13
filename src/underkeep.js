@@ -1,14 +1,15 @@
-import {createStoryDungeon,storyAction,interactStory} from './story-dungeon.js?v=7.0';
-import {hashSeed} from './monsters.js?v=7.0';
+import {directEncounter} from './encounters.js?v=7.5';
+import {createStoryDungeon,storyAction,interactStory} from './story-dungeon.js?v=7.5';
+import {hashSeed} from './monsters.js?v=7.5';
 
 export const floorNames=['Gate Halls','Broken Barracks','Sealed Sanctum'];
 export const underkeepSheets=['64','66','67','68','69','70'];
 const center=r=>({x:(r.cx+.5)*32,y:(r.cy+.5)*32});
-export function createUnderkeep(seed,depth){
+export function createUnderkeep(seed,depth,difficulty='adventurer'){
  // Retain the established three-wide corridors, optional branches and gated spine.
- const w=createStoryDungeon(`${seed}:underkeep:${depth}`,depth===2?'chapel':'raider',4,2);
+ const w=createStoryDungeon(`${seed}:underkeep:${depth}`,depth===2?'chapel':'raider',4,2,difficulty);
  w.theme='underkeep';w.depth=depth;w.name=`Black Stair ${depth} / 3 · ${floorNames[depth-1]}`;
- w.floorSheet=depth===3?'68':'05';w.wallSheet=depth===3?'69':'04';w.requiredSheets=underkeepSheets;
+ w.floorSheet=depth===3?'68':'101';w.wallSheet=depth===3?'69':'102';w.requiredSheets=underkeepSheets;
  w.key.taken=false;w.hasKey=false;w.objects=[];w.traps=[];w.props=[];
  const objective=w.rooms[w.mainCount-2],arena=w.rooms[w.mainCount-1];
  w.arena={left:arena.x*32,top:arena.y*32,right:(arena.x+arena.w)*32,bottom:(arena.y+arena.h)*32,...center(arena)};
@@ -23,13 +24,8 @@ export function createUnderkeep(seed,depth){
  const pools=depth===1?['grunt','archer','bandit','scavenger']:depth===2?['tank','brute','shaman','cult']:['cult','shaman','summoner','bone'];
  for(const r of w.rooms.slice(1)){
   if(depth===3&&r===arena){w.enemySpawns.push([r.cx,r.cy,'herald','boss']);continue;}
-  const count=r.optional?2:depth===1?2:3;
-  const roll=hashSeed(`${w.seed}:${r.id}`),positions=[[-3,-2],[3,-2],[0,3]];
-  for(let i=0;i<count;i++){
-   const species=i===0?pools[0]:pools[(roll+i)%pools.length];
-   const tier=(r.optional&&i===0)||(depth>1&&r.id===3&&i===0)?'elite':'normal';
-   w.enemySpawns.push([r.cx+positions[i][0],r.cy+positions[i][1],species,tier]);
-  }
+  const roll=hashSeed(`${w.seed}:${r.id}`);
+  w.enemySpawns.push(...directEncounter(w,r,4,depth,pools));
   // Pillars leave the center aisle and all spawn/interaction positions clear.
   if(depth===2&&!r.optional)for(const dx of [-4,4]){const x=r.cx+dx,y=r.cy;w.solid[y*w.width+x]=true;w.props.push({x,y,sheet:'04',cell:0});}
   else w.props.push({x:r.x+1,y:r.y+1,sheet:depth===3?'70':'03',cell:depth===3?9:2});

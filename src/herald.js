@@ -1,5 +1,5 @@
-import {move,canOccupy} from './world.js?v=7.0';
-import {spawnMonster} from './monsters.js?v=7.0';
+import {move,canOccupy} from './world.js?v=7.5';
+import {spawnMonster} from './monsters.js?v=7.5';
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 
 // Boss-local timers use simulation time; debug movement never accelerates these attacks.

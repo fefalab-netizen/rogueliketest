@@ -1,5 +1,5 @@
-import {rarities,colors,xpNeeded} from './progression.js?v=7.0';
-const labels={hp:'Max HP',attack:'Power',defense:'Defense',speed:'Speed',crit:'Critical chance',haste:'Attack speed'};
+import {rarities,colors,xpNeeded} from './progression.js?v=7.5';
+const labels={hp:'Max HP',attack:'Power',defense:'Defense',speed:'Speed',crit:'Critical chance',haste:'Attack speed',reach:'Reach',stagger:'Stagger (s)',frost:'Chill (s)'};
 const value=(key,n)=>['crit','haste'].includes(key)?`${Math.round(n*100)}%`:n;
 export function openInventory(progression,assets,characterOnly=false){
  const dialog=document.getElementById('gear');let selected=progression.items[0]?.id;
@@ -12,7 +12,7 @@ export function openInventory(progression,assets,characterOnly=false){
  for(const item of p.items){const b=document.createElement('button');b.className='gear-item';b.style.borderColor=colors[item.rarity];const c=document.createElement('canvas');c.width=40;c.height=40;assets.draw(c.getContext('2d'),item.sheet,item.cell,2,2,36,36);const span=document.createElement('span');span.textContent=`${item.name}${p.equipment[item.slot]?.id===item.id?' · equipped':''}`;b.append(c,span);b.onclick=()=>{selected=item.id;details();};document.getElementById('itemList').append(b);}
  details();
  }
- function details(){const p=progression,item=p.items.find(i=>i.id===selected);if(!item)return;const current=p.equipment[item.slot],keys=new Set([...Object.keys(item.stats),...Object.keys(current?.stats||{})]);const el=document.getElementById('itemDetails');el.innerHTML=`<h3 style="color:${colors[item.rarity]}">${item.name}</h3><p>${rarities[item.rarity]} · ${item.slot} · Compatible with your class</p><p>Compared with ${current?.name||'base gear'}:</p>${[...keys].map(k=>{const delta=(item.stats[k]||0)-(current?.stats[k]||0);return `<p>${labels[k]}: +${value(k,item.stats[k]||0)} <b style="color:${delta>=0?'#8bdd9d':'#ff9786'}">(${delta>=0?'+':''}${value(k,delta)})</b></p>`;}).join('')}<button id="equipItem">Equip</button>`;document.getElementById('equipItem').disabled=current?.id===item.id;document.getElementById('equipItem').onclick=()=>{p.equip(item.id);draw();};}
+ function details(){const p=progression,item=p.items.find(i=>i.id===selected);if(!item)return;const current=p.equipment[item.slot],keys=new Set([...Object.keys(item.stats),...Object.keys(current?.stats||{})]);const el=document.getElementById('itemDetails');el.innerHTML=`<h3 style="color:${colors[item.rarity]}">${item.name}</h3><p>${rarities[item.rarity]} · ${item.slot} · Compatible with your class</p><p>Compared with ${current?.name||'base gear'}:</p>${[...keys].map(k=>{const delta=(item.stats[k]||0)-(current?.stats[k]||0);return `<p>${labels[k]}: ${value(k,item.stats[k]||0)} <b style="color:${delta>=0?'#8bdd9d':'#ff9786'}">(${delta>=0?'+':''}${value(k,delta)})</b></p>`;}).join('')}<button id="equipItem">Equip</button>`;document.getElementById('equipItem').disabled=current?.id===item.id;document.getElementById('equipItem').onclick=()=>{p.equip(item.id);draw();};}
  draw();dialog.showModal();
 }
 

@@ -1,7 +1,7 @@
-import {hashSeed,spawnMonster} from './monsters.js?v=7.0';
-import {directEncounter} from './encounters.js?v=7.0';
-import {canOccupy} from './world.js?v=7.0';
-export function createStoryDungeon(seed,theme,level=1,progress=0){
+import {hashSeed,spawnMonster} from './monsters.js?v=7.5';
+import {directEncounter} from './encounters.js?v=7.5';
+import {canOccupy} from './world.js?v=7.5';
+export function createStoryDungeon(seed,theme,level=1,progress=0,difficulty='adventurer'){
  let rng=hashSeed(seed+theme);const random=()=>{rng=(Math.imul(rng,1664525)+1013904223)>>>0;return rng/4294967296;};
  const chapel=theme==='chapel',mainCount=chapel?7:6,width=80,height=60;
  const positions=[[0,0],[1,0],[2,0],[2,1],[1,1],[0,1],...(chapel?[[0,2]]:[]),[3,0],[3,1]];
@@ -19,13 +19,13 @@ export function createStoryDungeon(seed,theme,level=1,progress=0){
  const center=r=>({x:(r.cx+.5)*32,y:(r.cy+.5)*32}),spawn=center(rooms[0]),bossRoom=rooms[mainCount-1],objective=center(rooms[mainCount-2]);
  const objects=[{...center(rooms[1]),kind:'lore',text:chapel?'The inscription reads: wake the stone with your weight, raise the lever, then touch the altar.':'A ledger records stolen camp supplies. The Quartermaster keeps an iron seal beneath his coat.'},{...center(rooms[2]),kind:chapel?'plate':'supply',active:false}];
  if(chapel)objects.push({...center(rooms[3]),kind:'lever',active:false});
- const w={kind:'dungeon',theme,name:chapel?'The Bone Chapel':'The Raider Cellar',seed:String(seed),numericSeed:hashSeed(seed),width,height,solid,rooms,edges,mainCount,doors,props:[],objects,spawn,exit:{...center(bossRoom),y:center(bossRoom).y+96},key:{...objective,taken:false},hasKey:false,completed:false,bossDefeated:false,treasureKey:false,ritual:{plate:false,lever:false},chests:[],traps:[],enemySpawns:[],revealedRooms:new Set([0]),requiredSheets:chapel?['66','67','68','69','70']:[]};
+ const w={kind:'dungeon',difficulty,theme,name:chapel?'The Bone Chapel':'The Raider Cellar',seed:String(seed),numericSeed:hashSeed(seed),width,height,solid,rooms,edges,mainCount,doors,props:[],objects,spawn,exit:{...center(bossRoom),y:center(bossRoom).y+96},key:{...objective,taken:false},hasKey:false,completed:false,bossDefeated:false,treasureKey:false,ritual:{plate:false,lever:false},chests:[],traps:[],enemySpawns:[],revealedRooms:new Set([0]),requiredSheets:chapel?['66','67','68','69','70']:[]};
  for(const r of rooms.slice(1)){
   if(r.type==='boss')w.enemySpawns.push([r.cx,r.cy,chapel?'keeper':'quartermaster','boss']);
   else w.enemySpawns.push(...directEncounter(w,r,level,progress));
   if(r.optional||r.id===1)w.chests.push({...center(r),x:center(r).x+64,open:false,rare:r.optional});
   if((chapel&&r.id===3)||(!chapel&&r.id===3&&random()<.5))w.traps.push({x:center(r).x,y:center(r).y+64,phase:random()*3});
-  if(r.id!==mainCount-1)w.props.push({x:r.x+1,y:r.y+1,cell:chapel?9:2,sheet:chapel?'70':'03'});
+  if(r.id!==mainCount-1)w.props.push({x:r.x+1,y:r.y+1,cell:chapel?9:7,sheet:chapel?'70':'102'});
  }
  for(const d of doors)solid[d.y*width+d.x]=true;
  return w;

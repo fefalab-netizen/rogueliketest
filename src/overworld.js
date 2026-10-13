@@ -1,7 +1,9 @@
-import {TILE} from './world.js?v=7.0';
-import {seedNumber} from './dungeon.js?v=7.0';
+import {noise,trail,clearDisk,repairOutdoorRoutes} from './geography.js?v=7.5';
+import {directEncounter} from './encounters.js?v=7.5';
+import {TILE} from './world.js?v=7.5';
+import {seedNumber} from './dungeon.js?v=7.5';
 export const CHUNK_SIZE=64;
-export function createOverworld(seed='Dunbarrow'){
+export function createOverworld(seed='Dunbarrow',difficulty='adventurer'){
  const numericSeed=seedNumber(seed);let state=numericSeed;
  const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};
  const jitter=()=>Math.floor(random()*13)-6,width=256,height=256;
@@ -11,25 +13,24 @@ export function createOverworld(seed='Dunbarrow'){
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
   const i=y*width+x,border=x<2||y<2||x>253||y>253;
   const lake=Math.sin(x*.053+numericSeed%19)+Math.cos(y*.061)+Math.sin((x+y)*.027)>2.1;
-  terrain[i]=lake?2:0;solid[i]=border||lake||hash(x,y)<.075;
+  terrain[i]=lake?2:0;solid[i]=border||lake||(noise(numericSeed,x/15,y/15)*.7+noise(numericSeed+7,x/5,y/5)*.3>.64&&hash(x,y)<.65);
  }
  const definitions=[['camp','Dunbarrow Camp',128,128],['bandit','Bandit Road',76,128],['ridge','North Ridge',128,70],['grave','Grave Path',181,128],['approach','Sealed Stair Approach',128,181],['raider','The Raider Cellar',64,94],['chapel','The Bone Chapel',194,91],['underkeep','The Black Stair Underkeep',128,211]];
  const landmarks=definitions.map(([id,name,x,y])=>({id,name,tx:x+(id==='camp'?0:jitter()),ty:y+(id==='camp'?0:jitter())}));
  for(const l of landmarks){l.x=(l.tx+.5)*TILE;l.y=(l.ty+.5)*TILE;}
  const carve=(x,y,r=2)=>{for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const i=(y+dy)*width+x+dx;if(x+dx<2||x+dx>253||y+dy<2||y+dy>253)continue;terrain[i]=terrain[i]===2?3:1;solid[i]=false;}};
  const routes=[[0,1],[0,2],[0,3],[0,4],[1,5],[3,6],[4,7],[2,5],[2,6]];
- for(const [a,b] of routes){let {tx:x,ty:y}=landmarks[a];const t=landmarks[b],horizontal=random()<.5;
-  const walkX=()=>{while(x!==t.tx){carve(x,y);x+=Math.sign(t.tx-x);}};
-  const walkY=()=>{while(y!==t.ty){carve(x,y);y+=Math.sign(t.ty-y);}};
-  if(horizontal){walkX();walkY();}else{walkY();walkX();}carve(x,y);
- }
- for(const l of landmarks){const r=l.id==='camp'?10:5;for(let y=l.ty-r;y<=l.ty+r;y++)for(let x=l.tx-r;x<=l.tx+r;x++){terrain[y*width+x]=l.id==='camp'?1:0;solid[y*width+x]=false;}}
+ const geography={width,height,terrain,solid,numericSeed};
+ for(const [a,b]of routes)trail(geography,landmarks[a],landmarks[b]);
+ for(const l of landmarks){const radius=l.id==='camp'?11:6;for(let y=l.ty-radius-2;y<=l.ty+radius+2;y++)for(let x=l.tx-radius-2;x<=l.tx+radius+2;x++)if(Math.hypot(x-l.tx,y-l.ty)<radius+(noise(numericSeed,x/4,y/4)-.5)*3){terrain[y*width+x]=l.id==='camp'?1:0;solid[y*width+x]=false;}}
  const camp=landmarks[0],decorations=[{tx:camp.tx-5,ty:camp.ty-4,sheet:'84',cell:0,size:80},{tx:camp.tx+4,ty:camp.ty-4,sheet:'84',cell:1,size:86},{tx:camp.tx-5,ty:camp.ty+4,sheet:'84',cell:2,size:70},{tx:camp.tx+5,ty:camp.ty+4,sheet:'96',cell:11,size:58}];
  for(const p of decorations)solid[p.ty*width+p.tx]=true;
  const enemySpawns=[];
- for(const l of landmarks.slice(1,7)){for(const [dx,dy,type] of [[-3,3,4],[3,3,0],[0,-3,1]]){const x=l.tx+dx,y=l.ty+dy;if(Math.hypot(x-camp.tx,y-camp.ty)>15){solid[y*width+x]=false;enemySpawns.push([x,y,type]);}}}
- const w={kind:'overworld',seed:String(seed),numericSeed,width,height,terrain,solid,landmarks,decorations,enemySpawns,spawn:{x:camp.x,y:camp.y},safeZone:{x:camp.x,y:camp.y,radius:10*TILE},explored:new Uint8Array(width*height),chunks:new Map(),props:[],doors:[],traps:[],chests:[],hash};
- const report=validateOverworld(w);if(!report.valid)throw new Error('Overworld has unreachable landmarks.');
+ for(const l of landmarks.slice(1,7)){const room={id:landmarks.indexOf(l)+1,cx:l.tx,cy:l.ty,type:'wilderness',optional:false};enemySpawns.push(...directEncounter({width,height,solid,seed:String(seed),difficulty,theme:'raider'},room,1,0));}
+ landmarks.push({id:'caravan',name:'Iona’s Caravan · Expedition',tx:camp.tx+7,ty:camp.ty+2,x:(camp.tx+7.5)*32,y:(camp.ty+2.5)*32});
+ clearDisk(geography,camp.tx+7,camp.ty+2,2,1);decorations.push({tx:camp.tx+8,ty:camp.ty-1,sheet:'95',cell:5,size:76});
+ const w={kind:'overworld',name:'Dunbarrow',difficulty,seed:String(seed),numericSeed,width,height,terrain,solid,landmarks,decorations,enemySpawns,spawn:{x:camp.x,y:camp.y},safeZone:{x:camp.x,y:camp.y,radius:10*TILE},explored:new Uint8Array(width*height),chunks:new Map(),props:[],doors:[],traps:[],chests:[],hash};
+ repairOutdoorRoutes(w);
  reveal(w,w.spawn);updateChunks(w,w.spawn);return w;
 }
 export function validateOverworld(w){
@@ -41,7 +42,7 @@ export function updateChunks(w,p){
  const cx=Math.floor(p.x/TILE/CHUNK_SIZE),cy=Math.floor(p.y/TILE/CHUNK_SIZE),wanted=new Set();
  for(let y=Math.max(0,cy-1);y<=Math.min(3,cy+1);y++)for(let x=Math.max(0,cx-1);x<=Math.min(3,cx+1);x++){
   const key=x+','+y;wanted.add(key);if(w.chunks.has(key))continue;
-  const props=[];for(let ty=y*64;ty<(y+1)*64;ty++)for(let tx=x*64;tx<(x+1)*64;tx++)if(w.terrain[ty*256+tx]===0&&w.solid[ty*256+tx])props.push({tx,ty,sheet:'83',cell:w.hash(tx,ty)>.04?9:1,size:48});
+  const props=[];for(let ty=y*64;ty<(y+1)*64;ty++)for(let tx=x*64;tx<(x+1)*64;tx++)if(w.terrain[ty*256+tx]===0&&w.solid[ty*256+tx]){const biome=w.biomes?.[ty*256+tx],spec=!w.expedition?['83',w.hash(tx,ty)>.04?9:1,48]:biome===0?['104',[0,3,7,8,9,14][Math.floor(w.hash(tx,ty)*6)],48]:biome===1?['83',9,48]:biome===2?['102',15,42]:['111',[0,1,2,3,4,9,10,11][Math.floor(w.hash(tx,ty)*8)],42];props.push({tx,ty,sheet:spec[0],cell:spec[1],size:spec[2]});}
   props.push(...w.decorations.filter(p=>Math.floor(p.tx/64)===x&&Math.floor(p.ty/64)===y));w.chunks.set(key,{x,y,props});
  }
  for(const key of w.chunks.keys())if(!wanted.has(key))w.chunks.delete(key);
@@ -52,4 +53,4 @@ export function reveal(w,p){
  for(let dy=-11;dy<=11;dy++)for(let dx=-11;dx<=11;dx++)if(dx*dx+dy*dy<=121&&x+dx>=0&&y+dy>=0&&x+dx<w.width&&y+dy<w.height)w.explored[(y+dy)*w.width+x+dx]=1;
  updateChunks(w,p);
 }
-export function nearbyLandmark(w,p){return w.landmarks.find(l=>Math.hypot(l.x-p.x,l.y-p.y)<58);}
+export function nearbyLandmark(w,p){return w.landmarks.find(l=>!l.colossal&&Math.hypot(l.x-p.x,l.y-p.y)<58);}
