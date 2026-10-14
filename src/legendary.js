@@ -1,6 +1,6 @@
-import {createStoryDungeon} from './story-dungeon.js?v=7.5';
-import {regions} from './expedition.js?v=7.5';
-import {directEncounter} from './encounters.js?v=7.5';
+import {createStoryDungeon} from './story-dungeon.js?v=7.5.2';
+import {regions} from './expedition.js?v=7.5.2';
+import {directEncounter} from './encounters.js?v=7.5.2';
 export function createLegendary(a,event){
  const r=regions[event.region],w=createStoryDungeon(a.seed+':'+event.id,'raider',a.progression.level,2,a.difficulty);
  w.eventId=event.id;w.legendary=true;w.region=event.region;w.name=event.name;w.floorSheet=r.sheet;w.wallSheet='102';w.enemySpawns=[];w.traps=[];

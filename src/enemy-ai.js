@@ -1,8 +1,8 @@
-import {updateColossus} from './colossus.js?v=7.5';
-import {difficultyFor} from './difficulty.js?v=7.5';
-import {updateHerald} from './herald.js?v=7.5';
-import {move,canOccupy} from './world.js?v=7.5';
-import {spawnMonster} from './monsters.js?v=7.5';
+import {updateColossus} from './colossus.js?v=7.5.2';
+import {difficultyFor} from './difficulty.js?v=7.5.2';
+import {updateHerald} from './herald.js?v=7.5.2';
+import {move,canOccupy} from './world.js?v=7.5.2';
+import {spawnMonster} from './monsters.js?v=7.5.2';
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export function tactics(e,enemies){
  const allies=enemies.filter(a=>a!==e&&a.hp>0&&a.faction===e.faction&&dist(a,e)<260);

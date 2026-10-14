@@ -1,13 +1,13 @@
-import {hashSeed} from './monsters.js?v=7.5';
-import {noise,clearDisk,trail,repairOutdoorRoutes,safePosition} from './geography.js?v=7.5';
-import {directEncounter} from './encounters.js?v=7.5';
+import {hashSeed} from './monsters.js?v=7.5.2';
+import {noise,clearDisk,trail,repairOutdoorRoutes,safePosition} from './geography.js?v=7.5.2';
+import {directEncounter} from './encounters.js?v=7.5.2';
 export const regions=[
  {id:'volcano',name:'Volcanic Wastes',sheet:'103',enemySheet:'16',color:'#a46643',center:[64,64],boss:[29,32],bossId:'juggernaut',pool:['imp','emberhound','lava','brimstone'],warning:'Lava never cools. Amber circles mark vents about to erupt.'},
  {id:'jungle',name:'Deep Jungle',sheet:'105',enemySheet:'22',color:'#668549',center:[190,63],boss:[225,29],bossId:'matron',pool:['panther','rootboar','serpent','junglehunter'],warning:'Purple pools poison; roots stir before they grasp. Keep a clear retreat.'},
  {id:'ice',name:'Frozen Peaks',sheet:'107',enemySheet:'26',color:'#a9d0dc',center:[64,191],boss:[29,225],bossId:'tyrant',pool:['icewolf','frostboar','yeti','icespider'],warning:'Ice carries your momentum. Falling ice casts a blue warning circle.'},
  {id:'coast',name:'Drowned Coast',sheet:'109',enemySheet:'31',color:'#d5af70',center:[191,191],boss:[225,225],bossId:'admiral',pool:['sailor','harpoon','reef','coral'],warning:'Foam marks the rising tide. Deep water is impassable; bridges remain safe.'},
 ];
-export const expeditionSheets=['16','22','26','31','91','97','103','104','105','106','107','108','109','110','111'];
+export const expeditionSheets=['16','22','26','31','32','91','97','103','104','105','106','107','108','109','110','111'];
 export function regionAt(w,x,y){return regions[w.biomes[Math.max(0,Math.min(w.biomes.length-1,Math.floor(y/32)*w.width+Math.floor(x/32)))]];}
 export function createExpedition(seed,difficulty){
  const numericSeed=hashSeed(seed+':expedition'),width=256,height=256;
@@ -15,7 +15,7 @@ export function createExpedition(seed,difficulty){
  w.hash=(x,y)=>hashSeed(`${numericSeed}:${x}:${y}`)/4294967296;
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
   const i=y*width+x,n=noise(numericSeed,x/17,y/17),fine=noise(numericSeed+9,x/5,y/5),east=x>128+Math.sin(y*.05)*11+(n-.5)*24,south=y>128+Math.sin(x*.04)*12,biome=(south?2:0)+(east?1:0);
-  w.biomes[i]=biome;const wet=noise(numericSeed+43,x/23,y/23)>.70,wall=n*.7+fine*.3>.66;
+  w.biomes[i]=biome;const wet=noise(numericSeed+43,x/23,y/23)>.70,wall=n*.7+fine*.3>(biome===3?.77:.66);
   w.solid[i]=x<3||y<3||x>252||y>252||wall||wet;w.terrain[i]=wet?2:0;w.variants[i]=Math.floor(fine*15);
   if(!wall&&!wet&&n>.49&&fine>.62)w.hazards[i]=biome+1;
  }
@@ -30,10 +30,10 @@ export function createExpedition(seed,difficulty){
  for(const l of w.landmarks.filter(l=>!l.colossal))clearDisk(w,l.tx,l.ty,l.id==='outpost'?12:7,1);
  for(let i=0;i<4;i++){const l=w.landmarks[1+i*2];trail(w,w.landmarks[0],l);trail(w,l,w.landmarks[2+i*2]);}
  for(const [a,b]of [[1,3],[3,7],[7,5],[5,1]])trail(w,w.landmarks[a],w.landmarks[b]);
- w.decorations.push({tx:125,ty:125,sheet:'84',cell:0,size:78},{tx:131,ty:125,sheet:'95',cell:5,size:84});
+ w.decorations.push({tx:125,ty:125,sheet:'84',cell:0,size:78},{tx:131,ty:125,sheet:'96',cell:5,size:84});
  for(const [i,r]of regions.entries()){
   const [cx,cy]=r.center;
-  const landmarksArt=i===0?[['104',12],['104',11]]:i===1?[['102',15],['102',7]]:i===2?[['102',15],['102',5]]:[['111',1],['111',2]];
+  const landmarksArt=i===0?[['104',12],['104',11]]:i===1?[['102',15],['102',7]]:i===2?[['102',15],['102',7]]:[['111',1],['111',2]];
   landmarksArt.forEach(([sheet,cell],n)=>{const tx=cx+(n?4:-4),ty=cy-4;w.decorations.push({tx,ty,sheet,cell,size:56});w.solid[ty*width+tx]=true;});
   for(let n=0;n<7;n++){
    const angle=n*2.399,tx=Math.round(cx+Math.cos(angle)*(12+n*2)),ty=Math.round(cy+Math.sin(angle)*(12+n*2));

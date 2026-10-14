@@ -1,4 +1,4 @@
-import {noise} from './geography.js?v=7.5.1';
+import {noise} from './geography.js?v=7.5.2';
 const groundCells=[[0,2,3,4,6,7,12,13,15],[0,1,2,3,6,7,8,9,10,11,12,13,14,15],[0,1,2,3,4,5,7,12,13,14,15],[0,1,13,14,15]];
 export function outdoorTile(w,x,y){
  const i=y*w.width+x,t=w.terrain[i];
@@ -20,8 +20,8 @@ export function outdoorTile(w,x,y){
  return [sheet,groundCells[biome][v%groundCells[biome].length]];
 }
 export function dungeonFloor(w,x,y){
- const n=noise(w.numericSeed||1,x/4,y/4),sheet=w.floorSheet||(w.theme==='chapel'?'68':'101');
- if(sheet==='101')return [sheet,n>.68?2:n>.51?1:n<.25?4:0];
+ const n=noise(w.numericSeed||1,x/4,y/4),sheet=w.floorSheet||'101';
+ if(sheet==='101'){const ossuary=w.theme==='chapel'||w.depth===3,besideWall=[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>w.solid[(y+dy)*w.width+x+dx]);if(ossuary&&!w.solid[y*w.width+x]&&besideWall&&(x*17+y*29+(w.numericSeed||0))%43===0)return [sheet,6];return [sheet,n>.72?2:n>.58?1:0];}
  if(w.legendary)return [sheet,({103:0,105:15,107:0,109:0})[sheet]??0];
  return [sheet,n>.65?1:0];
 }

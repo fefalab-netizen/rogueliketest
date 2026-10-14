@@ -1,4 +1,4 @@
-import {move} from './world.js?v=7.5';
+import {move} from './world.js?v=7.5.2';
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export function updateColossus(c,e,dt,clear){
  const p=c.player;for(const k of ['flash','slow','cooldown'])e[k]=Math.max(0,(e[k]||0)-dt);

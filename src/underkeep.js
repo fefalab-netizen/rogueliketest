@@ -1,6 +1,6 @@
-import {directEncounter} from './encounters.js?v=7.5';
-import {createStoryDungeon,storyAction,interactStory} from './story-dungeon.js?v=7.5';
-import {hashSeed} from './monsters.js?v=7.5';
+import {directEncounter} from './encounters.js?v=7.5.2';
+import {createStoryDungeon,storyAction,interactStory} from './story-dungeon.js?v=7.5.2';
+import {hashSeed} from './monsters.js?v=7.5.2';
 
 export const floorNames=['Gate Halls','Broken Barracks','Sealed Sanctum'];
 export const underkeepSheets=['64','66','67','68','69','70'];
@@ -9,7 +9,7 @@ export function createUnderkeep(seed,depth,difficulty='adventurer'){
  // Retain the established three-wide corridors, optional branches and gated spine.
  const w=createStoryDungeon(`${seed}:underkeep:${depth}`,depth===2?'chapel':'raider',4,2,difficulty);
  w.theme='underkeep';w.depth=depth;w.name=`Black Stair ${depth} / 3 · ${floorNames[depth-1]}`;
- w.floorSheet=depth===3?'68':'101';w.wallSheet=depth===3?'69':'102';w.requiredSheets=underkeepSheets;
+ w.floorSheet='101';w.wallSheet=depth===3?'69':'102';w.requiredSheets=underkeepSheets;
  w.key.taken=false;w.hasKey=false;w.objects=[];w.traps=[];w.props=[];
  const objective=w.rooms[w.mainCount-2],arena=w.rooms[w.mainCount-1];
  w.arena={left:arena.x*32,top:arena.y*32,right:(arena.x+arena.w)*32,bottom:(arena.y+arena.h)*32,...center(arena)};
@@ -27,7 +27,7 @@ export function createUnderkeep(seed,depth,difficulty='adventurer'){
   const roll=hashSeed(`${w.seed}:${r.id}`);
   w.enemySpawns.push(...directEncounter(w,r,4,depth,pools));
   // Pillars leave the center aisle and all spawn/interaction positions clear.
-  if(depth===2&&!r.optional)for(const dx of [-4,4]){const x=r.cx+dx,y=r.cy;w.solid[y*w.width+x]=true;w.props.push({x,y,sheet:'04',cell:0});}
+  if(depth===2&&!r.optional)for(const dx of [-4,4]){const x=r.cx+dx,y=r.cy;w.solid[y*w.width+x]=true;w.props.push({x,y,sheet:'102',cell:7});}
   else w.props.push({x:r.x+1,y:r.y+1,sheet:depth===3?'70':'03',cell:depth===3?9:2});
   if(depth===3&&r.id>=2&&!r.optional)w.traps.push({x:center(r).x+64,y:center(r).y+64,phase:(roll%300)/100});
  }

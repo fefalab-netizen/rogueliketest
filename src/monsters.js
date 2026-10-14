@@ -18,12 +18,12 @@ monsters.herald={...monsters.keeper,id:'herald',name:'The First Herald',finalBos
 
 // Physical cell mappings from the supplied 111-sheet inventory.
 const regional=[
- ['imp','Imp Scout','16',0,'ranged',42,62,13],['emberhound','Ember Hound','16',4,'skirmisher',50,80,15],['lava','Lava Elemental','16',6,'tank',95,39,24],['brimstone','Brimstone Brute','16',10,'tank',120,35,27],
- ['panther','Vine Panther','22',0,'ambusher',62,85,19],['rootboar','Root-Tusk Boar','22',8,'tank',90,52,24],['serpent','Canopy Serpent','22',10,'caster',58,48,18],['junglehunter','Jungle Goblin','22',6,'ranged',50,62,17],
- ['icewolf','Ice Wolf','26',0,'skirmisher',65,76,20],['frostboar','Frost Boar','26',4,'tank',105,43,25],['yeti','Yeti','26',12,'tank',130,37,30],['icespider','Ice Spider','26',14,'ambusher',52,68,18],
- ['sailor','Drowned Sailor','31',0,'grunt',70,50,20],['harpoon','Harpoon Revenant','31',4,'ranged',65,46,23],['reef','Reef Skeleton','31',6,'skirmisher',58,60,20],['coral','Coral Priest','31',10,'support',70,40,18],
+ ['imp','Imp Scout','16',0,'ranged',42,62,13],['emberhound','Hellfire Hound','16',4,'skirmisher',50,80,15],['lava','Magma Elemental','16',6,'tank',95,39,24],['brimstone','Demon Mace Brute','16',10,'tank',120,35,27],
+ ['panther','Jungle Stalker','22',0,'ambusher',62,85,19],['rootboar','Root-Tusk Boar','22',8,'tank',90,52,24],['serpent','Canopy Cobra','22',10,'caster',58,48,18],['junglehunter','Lizard Spearman','22',6,'ranged',50,62,17],
+ ['icewolf','Ice Wolf','26',0,'skirmisher',65,76,20],['frostboar','Frost Boar','26',4,'tank',105,43,25],['yeti','White Yeti','26',12,'tank',130,37,30],['icespider','Ice Crystal Spider','26',14,'ambusher',52,68,18],
+ ['sailor','Drowned Sailor','31',0,'grunt',70,50,20],['harpoon','Harpoon Revenant','31',4,'ranged',65,46,23],['reef','Coral Skeleton Pirate','31',6,'skirmisher',58,60,20],['coral','Coral Priest','32',4,'support',70,40,18],
 ];
-for(const [id,name,sheet,frame,role,hp,speed,damage]of regional){const region=['16','22','26','31'].indexOf(sheet),biome=['volcano','jungle','ice','coast'][region];monsters[id]=define(id,name,frame,hp,speed,damage,24,role,{sheet,frames:[frame,frame+1],faction:biome,biomes:[biome],cost:role==='tank'?4:['ranged','caster','support'].includes(role)?3:2,armor:role==='tank'?3:0,abilities:role==='support'?['heal','ward']:role==='tank'?['lunge']:[],statuses:['ice','jungle'].includes(biome)?['slow']:[]});}
+for(const [id,name,sheet,frame,role,hp,speed,damage]of regional){const region=({'16':0,'22':1,'26':2,'31':3,'32':3})[sheet],biome=['volcano','jungle','ice','coast'][region];monsters[id]=define(id,name,frame,hp,speed,damage,24,role,{sheet,frames:[frame,frame+1],faction:biome,biomes:[biome],cost:role==='tank'?4:['ranged','caster','support'].includes(role)?3:2,armor:role==='tank'?3:0,abilities:role==='support'?['heal','ward']:role==='tank'?['lunge']:[],statuses:['ice','jungle'].includes(biome)?['slow']:[]});}
 for(const [id,name,frame,region]of [['juggernaut','Infernal Juggernaut',14,'volcano'],['matron','Rotwood Matron',4,'jungle'],['tyrant','Frostfang Tyrant',6,'ice'],['admiral','Drowned Admiral',8,'coast']]){
  monsters[id]=define(id,name,frame,540,21,43,170,'colossal',{sheet:'91',frames:[frame,frame+1],boss:true,colossal:true,faction:region,biomes:[region],armor:5,resistance:.95,cost:25});
  const base=regional.find(r=>monsters[r[0]].faction===region&&r[4]==='tank')||regional.find(r=>monsters[r[0]].faction===region);

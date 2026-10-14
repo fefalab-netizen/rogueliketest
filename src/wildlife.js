@@ -1,5 +1,5 @@
-import {move,canOccupy} from './world.js?v=7.5';
-import {hashSeed} from './monsters.js?v=7.5';
+import {move,canOccupy} from './world.js?v=7.5.2';
+import {hashSeed} from './monsters.js?v=7.5.2';
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const animals=[
  [['110',14,'passive',22],['110',2,'scavenger',29]],

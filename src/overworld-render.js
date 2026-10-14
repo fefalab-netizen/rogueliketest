@@ -1,11 +1,12 @@
-import {outdoorTile} from './terrain-art.js?v=7.5';
-import {TILE} from './world.js?v=7.5';
+import {artRefs} from './art-mappings.js?v=7.5.2';
+import {outdoorTile} from './terrain-art.js?v=7.5.2';
+import {TILE} from './world.js?v=7.5.2';
 const mapCache=new WeakMap();
 export function drawOverworld(g,assets,w,p,bounds,ox,oy,sprites){
  const {minX,maxX,minY,maxY}=bounds;
  for(let y=minY;y<maxY;y++)for(let x=minX;x<maxX;x++){
   const t=w.terrain[y*w.width+x],px=x*TILE+ox,py=y*TILE+oy;
-  g.fillStyle=t===2?'#154d78':t===1||t===3?'#876038':'#456228';g.fillRect(px,py,TILE,TILE);
+  g.fillStyle=t===2?'#154d78':w.expedition?['#494048','#40522c','#c5d7de','#d8ad64'][w.biomes[y*w.width+x]]:t===1||t===3?'#876038':'#456228';g.fillRect(px,py,TILE,TILE);
   const [sheet,cell]=outdoorTile(w,x,y);assets.draw(g,sheet,cell,px,py,32,32);
  }
  for(const chunk of w.chunks.values())for(const prop of chunk.props){if(prop.tx<minX-2||prop.tx>maxX+2||prop.ty<minY-2||prop.ty>maxY+2)continue;
@@ -14,7 +15,7 @@ export function drawOverworld(g,assets,w,p,bounds,ox,oy,sprites){
  for(const l of w.landmarks){if(l.tx<minX-3||l.tx>maxX+3||l.ty<minY-3||l.ty>maxY+3)continue;
   if(l.colossal)continue;const camp=l.id==='camp'||l.id==='outpost',dungeon=['raider','chapel','underkeep'].includes(l.id),size=camp?48:dungeon?62:34;
   sprites.push({depth:l.y+12,draw:()=>{
-   if(l.legendary)assets.draw(g,'97',2,l.x+ox-27,l.y+oy-43,54,60);else if(l.cache)assets.draw(g,'111',l.claimed?10:7,l.x+ox-22,l.y+oy-25,44,38);else if(l.id!=='caravan')assets.draw(g,camp?'84':dungeon?'102':'95',camp?8:dungeon?10:0,l.x+ox-size/2,l.y+oy-size+14,size,size);
+   if(l.legendary)assets.draw(g,'97',2,l.x+ox-27,l.y+oy-43,54,60);else if(l.cache){if(!l.claimed)assets.draw(g,'111',7,l.x+ox-22,l.y+oy-25,44,38);}else if(l.id!=='caravan')assets.draw(g,...(camp?['84',8]:dungeon?['102',10]:artRefs.sign),l.x+ox-size/2,l.y+oy-size+14,size,size);
    g.font='9px monospace';g.textAlign='center';g.fillStyle='#0a1210df';g.fillRect(l.x+ox-80,l.y+oy+17,160,15);g.fillStyle=camp?'#efcf89':'#e0e6c9';g.fillText(l.name,l.x+ox,l.y+oy+28);g.textAlign='start';
   }});
  }

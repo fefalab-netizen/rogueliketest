@@ -1,14 +1,14 @@
-import {createExpedition,regions as wildRegions,updateEvents} from './expedition.js?v=7.5';
-import {createLegendary,resolveEvent} from './legendary.js?v=7.5';
-import {populateWildlife,updateWildlife} from './wildlife.js?v=7.5';
-import {safePosition,prepareDungeon} from './geography.js?v=7.5';
-import {createUnderkeep,interactUnderkeep} from './underkeep.js?v=7.5';
-import {createStoryDungeon,interactStory} from './story-dungeon.js?v=7.5';
-import {Quests,campNPCs} from './quests.js?v=7.5';
-import {createOverworld,nearbyLandmark} from './overworld.js?v=7.5';
-import {createDungeon,interactDungeon} from './dungeon.js?v=7.5';
-import {Combat} from './combat.js?v=7.5';
-import {Progression} from './progression.js?v=7.5';
+import {createExpedition,regions as wildRegions,updateEvents} from './expedition.js?v=7.5.2';
+import {createLegendary,resolveEvent} from './legendary.js?v=7.5.2';
+import {populateWildlife,updateWildlife} from './wildlife.js?v=7.5.2';
+import {safePosition,prepareDungeon} from './geography.js?v=7.5.2';
+import {createUnderkeep,interactUnderkeep} from './underkeep.js?v=7.5.2';
+import {createStoryDungeon,interactStory} from './story-dungeon.js?v=7.5.2';
+import {Quests,campNPCs} from './quests.js?v=7.5.2';
+import {createOverworld,nearbyLandmark} from './overworld.js?v=7.5.2';
+import {createDungeon,interactDungeon} from './dungeon.js?v=7.5.2';
+import {Combat} from './combat.js?v=7.5.2';
+import {Progression} from './progression.js?v=7.5.2';
 
 // Region state survives travel: enemies, doors, loot and chests are not regenerated.
 export class Adventure {
@@ -37,7 +37,7 @@ export class Adventure {
   return 'Entered '+w.name+'. The stone stairs lead between floors.';
  }
  get fare(){return this.caravanPaid?20:40;}
- get caravan(){const w=this.world,l=w.landmarks?.find(l=>l.id===(w.expedition?'outpost':'caravan'));return l?{id:'caravan',name:'Iona',role:'Caravan Guide',sheet:'51',frame:12,x:l.x,y:l.y}:null;}
+ get caravan(){const w=this.world,l=w.landmarks?.find(l=>l.id===(w.expedition?'outpost':'caravan'));return l?{id:'caravan',name:'Iona',role:'Caravan Guide',sheet:'52',frame:14,x:l.x,y:l.y}:null;}
  journey(){
   if(this.travelBusy)return 'The caravan is already moving.';
   if(this.world.kind!=='overworld'||!this.caravan||Math.hypot(this.player.x-this.caravan.x,this.player.y-this.caravan.y)>65)return 'Meet Iona beside the caravan.';

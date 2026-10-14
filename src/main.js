@@ -1,27 +1,28 @@
-import {expeditionSheets,regionAt} from './expedition.js?v=7.5';
-import {confirmJourney} from './travel-ui.js?v=7.5';
-import {drawWildlife} from './wildlife.js?v=7.5';
-import {drawColossalWarnings} from './colossus.js?v=7.5';
-import {updateHazards,drawHazards} from './hazards.js?v=7.5';
-import {dungeonFloor,wallCell} from './terrain-art.js?v=7.5';
-import {underkeepAction,underkeepSheets} from './underkeep.js?v=7.5';
-import {presentEnding} from './ending.js?v=7.5';
-import {DebugSpeed} from './debug-speed.js?v=7.5';
-import {nearbyNPC} from './quests.js?v=7.5';
-import {openStory} from './story-ui.js?v=7.5';
-import {storyAction} from './story-dungeon.js?v=7.5';
-import {spriteUsage,coreSheets} from './sprite-usage.js?v=7.5';
-import {Adventure} from './adventure.js?v=7.5';
-import {reveal,nearbyLandmark} from './overworld.js?v=7.5';
-import {drawOverworld,drawFog,drawWorldMap} from './overworld-render.js?v=7.5';
-import {createDungeon,nearbyInteraction,interactDungeon,trapActive} from './dungeon.js?v=7.5';
-import {flipForAim} from './facing.js?v=7.5';
-import {AssetManager} from './assets.js?v=7.5';
-import {classes,art} from './data.js?v=7.5';
-import {TILE,direction} from './world.js?v=7.5';
-import {Combat,weapons,lineClear} from './combat.js?v=7.5';
-import {Progression,xpNeeded,colors} from './progression.js?v=7.5';
-import {openInventory} from './inventory.js?v=7.5';
+import {artRefs} from './art-mappings.js?v=7.5.2';
+import {expeditionSheets,regionAt} from './expedition.js?v=7.5.2';
+import {confirmJourney} from './travel-ui.js?v=7.5.2';
+import {drawWildlife} from './wildlife.js?v=7.5.2';
+import {drawColossalWarnings} from './colossus.js?v=7.5.2';
+import {updateHazards,drawHazards} from './hazards.js?v=7.5.2';
+import {dungeonFloor,wallCell} from './terrain-art.js?v=7.5.2';
+import {underkeepAction,underkeepSheets} from './underkeep.js?v=7.5.2';
+import {presentEnding} from './ending.js?v=7.5.2';
+import {DebugSpeed} from './debug-speed.js?v=7.5.2';
+import {nearbyNPC} from './quests.js?v=7.5.2';
+import {openStory} from './story-ui.js?v=7.5.2';
+import {storyAction} from './story-dungeon.js?v=7.5.2';
+import {spriteUsage,coreSheets} from './sprite-usage.js?v=7.5.2';
+import {Adventure} from './adventure.js?v=7.5.2';
+import {reveal,nearbyLandmark} from './overworld.js?v=7.5.2';
+import {drawOverworld,drawFog,drawWorldMap} from './overworld-render.js?v=7.5.2';
+import {createDungeon,nearbyInteraction,interactDungeon,trapActive} from './dungeon.js?v=7.5.2';
+import {flipForAim} from './facing.js?v=7.5.2';
+import {AssetManager} from './assets.js?v=7.5.2';
+import {classes,art} from './data.js?v=7.5.2';
+import {TILE,direction} from './world.js?v=7.5.2';
+import {Combat,weapons,lineClear} from './combat.js?v=7.5.2';
+import {Progression,xpNeeded,colors} from './progression.js?v=7.5.2';
+import {openInventory} from './inventory.js?v=7.5.2';
 
 const $=id=>document.getElementById(id),canvas=$('game'),g=canvas.getContext('2d');
 const assets=new AssetManager(),keys=new Set(),debugSpeed=new DebugSpeed();
@@ -106,8 +107,8 @@ addEventListener('blur',blur);document.addEventListener('visibilitychange',()=>{
 $('closeInfo').onclick=()=>$('info').close();
 $('helpButton').onclick=()=>{$('infoBody').innerHTML='<h2>The Living Wilderness</h2><p>Choose a difficulty when starting a run. Iona’s caravan is on the east side of camp: first passage 40 gold, later passages 20, returns always free. Four connected regions offer wildlife, guarded discoveries and remote colossal creatures. Retreat is always an option. Legendary entrances explain their rules before entry. Amber, violet and blue ground warnings give time to evade hazards. These expeditions are optional; Aldric’s campaign is unchanged.</p><h2>Explore Dunbarrow</h2><p>Start in a safe camp. Follow roads west to the Raider Cellar or east to the Bone Chapel. E at the campfire restores health and supplies at least two potions. M toggles the exploration map. Trees, rocks and water block travel; roads and bridges connect all landmarks. Unknown terrain is hidden by fog.</p><p>WASD / arrows: walk and face movement. Moving the mouse aims; hold left click to attack in that direction. Space: dodge. E: open a nearby door or chest, pick up the golden key, or use stairs. I: inventory. C: statistics. 1: potion. M: toggle map. Escape: pause.</p><p>Recover each dungeon’s gate key or complete its ritual, defeat its miniboss, then use the violet exit stairs. Optional rooms are not required. J opens the quest journal. Talk to camp NPCs with E. Brunna buys and sells gear. Developer controls: F4 toggles movement speed; Shift+F4 cycles 1× / 2× / 4× / 8×. The Black Stair opens after both artifacts. Its three floors retain their state when you backtrack. Stone stairs lead between floors; their labels show the destination. Defeat the First Herald, take the exit home and speak to Aldric for the ending. Equipment, health, enemies, doors and opened chests persist when travelling between regions during this run. Spike traps pulse amber before firing. Chests give equipment and a potion. Enter a seed to replay its layout, or choose Random seed for another dungeon.</p>';$('info').showModal();};
 $('assetsButton').onclick=()=>{
-  $('infoBody').innerHTML='<h2>Supplied asset report</h2><p>All 111 original PNGs are registered. Only core and visited-region sheets are loaded. Every cell has a stable physical ID (for example 05.r1c1). The planned labels differ from the pictures; the foundation uses visually verified mappings.</p><p>03.png = props · 04.png = walls · 05.png = floors. A/B character pairs share crop bounds and scale. Dimensions and alpha are inspected when loaded.</p><table><thead><tr><th>File</th><th>Actual dimensions</th><th>Transparency</th></tr></thead><tbody>'+[...assets.atlases].sort().map(([id,a])=>`<tr><td>${id}.png</td><td>${a.width} × ${a.height}</td><td>${a.transparent?'Present':'Absent'}</td></tr>`).join('')+'</tbody></table>';
-  $('infoBody').innerHTML+='<h3>Verified cell uses (zero-based)</h3><p>'+spriteUsage.map(u=>`${u.sheet}.${u.cell}: ${u.use}`).join('<br>')+'</p>';
+  $('infoBody').innerHTML='<h2>Supplied asset report</h2><p>All 111 original PNGs are registered. Only core and visited-region sheets are loaded. Every cell has a stable physical ID (for example 05.r1c1). Sprite descriptions and mappings use SPRITE_LABELS_ALL_1776_AUDITED.txt.</p><p>03.png = props · 04.png = walls · 05.png = floors. A/B character pairs share crop bounds and scale. Dimensions and alpha are inspected when loaded.</p><table><thead><tr><th>File</th><th>Actual dimensions</th><th>Transparency</th></tr></thead><tbody>'+[...assets.atlases].sort().map(([id,a])=>`<tr><td>${id}.png</td><td>${a.width} × ${a.height}</td><td>${a.transparent?'Present':'Absent'}</td></tr>`).join('')+'</tbody></table>';
+  $('infoBody').innerHTML+='<h3>Audited cell uses (zero-based)</h3><p>'+spriteUsage.map(u=>`${u.sheet}.${u.cell}: ${u.label||u.use} — ${u.use}`).join('<br>')+'</p>';
   for(const error of assets.errors){const p=document.createElement('p');p.textContent=error;$('infoBody').append(p);}$('info').showModal();
 };
 function simulate(dt){adventure.elapsed+=dt;adventure.tick(dt);const d=direction(keys);const mx=pointer.x*viewWidth/innerWidth-viewWidth/2+camera.x,my=pointer.y*viewHeight/innerHeight-viewHeight/2+camera.y;combat.update(dt,{...d,angle:Math.atan2(my-(player.y-13),mx-player.x),aiming:performance.now()<aimUntil,attack:attacking,dodge:dodgeRequested,moveMultiplier:debugSpeed.value});dodgeRequested=false;updateHazards(adventure,dt,d);if(world.kind==='overworld')reveal(world,player);else if(world.theme){world.explored??=new Set();const tx=Math.floor(player.x/32),ty=Math.floor(player.y/32);for(let dy=-7;dy<=7;dy++)for(let dx=-7;dx<=7;dx++){const x=tx+dx,y=ty+dy;if(x>=0&&y>=0&&x<world.width&&y<world.height)world.explored.add(y*world.width+x);}const plate=world.objects.find(o=>o.kind==='plate'&&Math.hypot(o.x-player.x,o.y-player.y)<20);if(plate&&!plate.active){plate.active=true;world.ritual.plate=true;notifyLoot('Pressure plate latched. Find the lever next.');}} for(const trap of world.traps)if(trapActive(trap,combat.time)&&Math.hypot(player.x-trap.x,player.y-trap.y)<17)combat.hurt(15*(world.difficulty==='nightmare'?1.3:world.difficulty==='veteran'?1.15:world.difficulty==='explorer'?.75:1),trap);const blend=1-Math.exp(-9*dt);camera.x+=(player.x-camera.x)*blend;camera.y+=(player.y-camera.y)*blend;animation+=dt;
@@ -139,6 +140,7 @@ function render(){
   }});}
   if(!outdoors)for(let y=minY;y<maxY;y++)for(let x=minX;x<maxX;x++){
     const px=x*TILE+ox,py=y*TILE+oy,isProp=world.props.some(p=>p.x===x&&p.y===y),wall=world.solid[y*world.width+x]&&!isProp&&!world.doors.some(d=>d.x===x&&d.y===y);
+    if(wall&&![[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>x+dx>=0&&y+dy>=0&&x+dx<world.width&&y+dy<world.height&&!world.solid[(y+dy)*world.width+x+dx]))continue;
     const [floorSheet,floorCell]=dungeonFloor(world,x,y);assets.draw(g,floorSheet,floorCell,px,py,TILE,TILE);
     // Subtle ground shading keeps characters and collision silhouettes legible.
     g.fillStyle='#07101735';g.fillRect(px,py,TILE,TILE);
@@ -146,14 +148,14 @@ function render(){
     if(debug&&world.solid[y*world.width+x]){g.strokeStyle='#e79462';g.strokeRect(px+.5,py+.5,31,31);}
   }
   for(const p of world.props)sprites.push({depth:(p.y+1)*TILE,draw:()=>assets.draw(g,p.sheet||art.props,p.cell,p.x*TILE+ox,p.y*TILE+oy-6,32,38)});
-  for(const trap of world.traps){const active=trapActive(trap,combat.time),warning=(combat.time+trap.phase)%3>1.3;g.fillStyle=active?'#df714477':warning?(Math.sin(combat.time*20)>0?'#ffd45899':'#ffd45833'):'#c9a45822';g.fillRect(trap.x+ox-15,trap.y+oy-15,30,30);assets.draw(g,'96',active?7:6,trap.x+ox-14,trap.y+oy-12,28,24);}
+  for(const trap of world.traps){const active=trapActive(trap,combat.time),warning=(combat.time+trap.phase)%3>1.3;g.fillStyle=active?'#df714477':warning?(Math.sin(combat.time*20)>0?'#ffd45899':'#ffd45833'):'#c9a45822';g.fillRect(trap.x+ox-15,trap.y+oy-15,30,30);assets.draw(g,...(active?artRefs.trapRaised:artRefs.trapRetracted),trap.x+ox-14,trap.y+oy-12,28,24);}
   if(!outdoors)for(const [p,cell,label]of [[world.spawn,9,world.depth?'ASCEND':'ENTRANCE'],[world.exit,world.depth===3?9:10,world.depth===3?'WAY HOME':world.depth?'DESCEND':'EXIT']])sprites.push({depth:p.y+8,draw:()=>{assets.draw(g,'102',cell,p.x+ox-20,p.y+oy-26,40,40);g.fillStyle='#d3d5c4';g.font='7px monospace';g.fillText(label,p.x+ox-16,p.y+oy+23);}});
   for(const d of world.doors)sprites.push({depth:(d.y+1)*TILE,draw:()=>assets.draw(g,'102',d.open?2:d.lock?4:3,d.x*TILE+ox,d.y*TILE+oy-12,32,44)});
   for(const c of world.chests)sprites.push({depth:c.y+8,draw:()=>assets.draw(g,'03',c.open?5:4,c.x+ox-15,c.y+oy-22,30,30)});
-  if(!outdoors&&!world.key.taken)sprites.push({depth:world.key.y,draw:()=>assets.draw(g,'03',12,world.key.x+ox-10,world.key.y+oy-16,20,24)});
+  if(!outdoors&&!world.key.taken&&world.theme!=='chapel')sprites.push({depth:world.key.y,draw:()=>assets.draw(g,'03',12,world.key.x+ox-10,world.key.y+oy-16,20,24)});
   if(outdoors&&adventure)for(const n of [...(world.expedition?[]:adventure.npcs),...(adventure.caravan?[adventure.caravan]:[])])sprites.push({depth:n.y+8,draw:()=>{assets.draw(g,n.sheet,n.frame+Math.floor(animation/.42)%2,n.x+ox-20,n.y+oy-34,40,42);g.fillStyle='#f4d992';g.font='8px monospace';g.fillText(n.name,n.x+ox-28,n.y+oy-43);}});
-  for(const o of world.objects||[]){if(o.kind==='plate')assets.draw(g,'96',o.active?3:2,o.x+ox-15,o.y+oy-10,30,22);else if(o.kind==='lever')assets.draw(g,'96',o.active?1:0,o.x+ox-16,o.y+oy-28,32,36,o.active);else assets.draw(g,'03',o.kind==='supply'?2:13,o.x+ox-12,o.y+oy-20,24,28);g.fillStyle=o.active?'#8fdfb1':'#e3ce9b';g.font='7px monospace';g.fillText(o.kind.toUpperCase(),o.x+ox-18,o.y+oy+18);}
-  if(world.theme==='chapel'&&!world.key.taken)assets.draw(g,'70',3,world.key.x+ox-22,world.key.y+oy-40,44,50);
+  for(const o of world.objects||[]){if(o.kind==='plate')assets.draw(g,...(o.active?artRefs.platePressed:artRefs.plateRaised),o.x+ox-15,o.y+oy-10,30,22);else if(o.kind==='lever')assets.draw(g,...(o.active?artRefs.leverUp:artRefs.leverDown),o.x+ox-16,o.y+oy-28,32,36);else assets.draw(g,...(o.kind==='supply'?artRefs.supplies:artRefs.lore),o.x+ox-12,o.y+oy-20,24,28);g.fillStyle=o.active?'#8fdfb1':'#e3ce9b';g.font='7px monospace';g.fillText(o.kind.toUpperCase(),o.x+ox-18,o.y+oy+18);}
+  if(world.theme==='chapel'&&!world.key.taken)assets.draw(g,'69',12,world.key.x+ox-22,world.key.y+oy-40,44,50);
   sprites.push({depth:player.y+8,draw:()=>{g.fillStyle='#050b0bb0';g.beginPath();g.ellipse(Math.round(player.x+ox),Math.round(player.y+oy+5),12,5,0,0,Math.PI*2);g.fill();g.save();if(player.flash>0)g.globalAlpha=.5;assets.character(g,classes[selected].frames[Math.floor(animation/.42)%2],player.x+ox,player.y+oy+8,42,player.flip);g.restore();}});
   for(const e of combat.enemies){if(e.hp<=0||Math.abs(e.x-player.x)>viewWidth/2+100||Math.abs(e.y-player.y)>viewHeight/2+100)continue;sprites.push({depth:e.y+8,draw:()=>{
     const x=Math.round(e.x+ox),y=Math.round(e.y+oy),a=assets.atlases.get(e.sheet),b=a?.frames[e.frame].bounds,ratio=b?(b.right-b.left+1)/(b.bottom-b.top+1):1;

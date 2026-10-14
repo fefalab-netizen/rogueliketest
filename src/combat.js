@@ -1,10 +1,10 @@
-import {damageAnimal} from './wildlife.js?v=7.5';
-import {tuneEnemy} from './difficulty.js?v=7.5';
-import {safePosition} from './geography.js?v=7.5';
-import {legacyMonsters,spawnMonster} from './monsters.js?v=7.5';
-import {updateEnemy} from './enemy-ai.js?v=7.5';
-import {flipForAim,facingAngle} from './facing.js?v=7.5';
-import {move,canOccupy,TILE} from './world.js?v=7.5';
+import {damageAnimal} from './wildlife.js?v=7.5.2';
+import {tuneEnemy} from './difficulty.js?v=7.5.2';
+import {safePosition} from './geography.js?v=7.5.2';
+import {legacyMonsters,spawnMonster} from './monsters.js?v=7.5.2';
+import {updateEnemy} from './enemy-ai.js?v=7.5.2';
+import {flipForAim,facingAngle} from './facing.js?v=7.5.2';
+import {move,canOccupy,TILE} from './world.js?v=7.5.2';
 export const weapons=[
  {kind:'melee',cooldown:.55,range:55,arc:1.2,fx:10,special:'Wide axe sweep'},
  {kind:'melee',cooldown:.4,range:52,arc:.95,fx:0,special:'Heavy armor'},
