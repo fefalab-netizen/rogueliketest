@@ -1,6 +1,6 @@
-import {auditedLabels} from './sprite-labels.js?v=7.5.2';
-import {artRefs} from './art-mappings.js?v=7.5.2';
-import {monsters} from './monsters.js?v=7.5.2';
+import {auditedLabels} from './sprite-labels.js?v=8.0.0';
+import {artRefs} from './art-mappings.js?v=8.0.0';
+import {monsters} from './monsters.js?v=8.0.0';
 // Zero-based cells. New character pairs checked against the attached source sheets.
 export const spriteUsage=[
  ...Object.values(monsters).flatMap(m=>m.frames.map(cell=>({sheet:m.sheet,cell,use:m.name,pair:true}))),

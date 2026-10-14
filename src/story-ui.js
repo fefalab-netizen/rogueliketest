@@ -1,4 +1,4 @@
-import {dialogue,buy,sell} from './quests.js?v=7.5.2';
+import {dialogue,buy,sell} from './quests.js?v=8.0.0';
 export function openStory(a,npc,close){
  const panel=document.getElementById('story');panel.replaceChildren();const heading=document.createElement('h2');heading.textContent=npc?`${npc.name} · ${npc.role}`:'Journal · The Black Stair';panel.append(heading);
  const text=value=>{const p=document.createElement('p');p.textContent=value;panel.append(p);};

@@ -1,7 +1,8 @@
-import {noise,trail,clearDisk,repairOutdoorRoutes} from './geography.js?v=7.5.2';
-import {directEncounter} from './encounters.js?v=7.5.2';
-import {TILE} from './world.js?v=7.5.2';
-import {seedNumber} from './dungeon.js?v=7.5.2';
+import {seedWildernessPacks} from './dunbarrow-danger.js?v=8.0.0';
+import {noise,trail,clearDisk,repairOutdoorRoutes} from './geography.js?v=8.0.0';
+import {directEncounter} from './encounters.js?v=8.0.0';
+import {TILE} from './world.js?v=8.0.0';
+import {seedNumber} from './dungeon.js?v=8.0.0';
 export const CHUNK_SIZE=64;
 export function createOverworld(seed='Dunbarrow',difficulty='adventurer'){
  const numericSeed=seedNumber(seed);let state=numericSeed;
@@ -30,7 +31,7 @@ export function createOverworld(seed='Dunbarrow',difficulty='adventurer'){
  landmarks.push({id:'caravan',name:'Iona’s Caravan · Expedition',tx:camp.tx+7,ty:camp.ty+2,x:(camp.tx+7.5)*32,y:(camp.ty+2.5)*32});
  clearDisk(geography,camp.tx+7,camp.ty+2,2,1);decorations.push({tx:camp.tx+8,ty:camp.ty-1,sheet:'96',cell:5,size:76});
  const w={kind:'overworld',name:'Dunbarrow',difficulty,seed:String(seed),numericSeed,width,height,terrain,solid,landmarks,decorations,enemySpawns,spawn:{x:camp.x,y:camp.y},safeZone:{x:camp.x,y:camp.y,radius:10*TILE},explored:new Uint8Array(width*height),chunks:new Map(),props:[],doors:[],traps:[],chests:[],hash};
- repairOutdoorRoutes(w);
+ repairOutdoorRoutes(w);seedWildernessPacks(w);
  reveal(w,w.spawn);updateChunks(w,w.spawn);return w;
 }
 export function validateOverworld(w){
@@ -42,7 +43,7 @@ export function updateChunks(w,p){
  const cx=Math.floor(p.x/TILE/CHUNK_SIZE),cy=Math.floor(p.y/TILE/CHUNK_SIZE),wanted=new Set();
  for(let y=Math.max(0,cy-1);y<=Math.min(3,cy+1);y++)for(let x=Math.max(0,cx-1);x<=Math.min(3,cx+1);x++){
   const key=x+','+y;wanted.add(key);if(w.chunks.has(key))continue;
-  const props=[];for(let ty=y*64;ty<(y+1)*64;ty++)for(let tx=x*64;tx<(x+1)*64;tx++)if(w.terrain[ty*256+tx]===0&&w.solid[ty*256+tx]){const biome=w.biomes?.[ty*256+tx],spec=!w.expedition?['83',w.hash(tx,ty)>.16?0:8,48]:biome===0?['104',[0,3,7,8,9,14][Math.floor(w.hash(tx,ty)*6)],48]:biome===1?['83',0,48]:biome===2?['102',15,42]:w.hash(tx,ty)<.04?['111',0,36]:['83',8,30];props.push({tx,ty,sheet:spec[0],cell:spec[1],size:spec[2]});}
+  const props=[];for(let ty=y*64;ty<(y+1)*64;ty++)for(let tx=x*64;tx<(x+1)*64;tx++)if(w.terrain[ty*256+tx]===0&&w.solid[ty*256+tx]&&!w.decorations.some(p=>p.tx===tx&&p.ty===ty)){const biome=w.biomes?.[ty*256+tx],spec=!w.expedition?['83',w.hash(tx,ty)>.16?0:8,48]:biome===0?['104',[0,3,7,8,9,14][Math.floor(w.hash(tx,ty)*6)],48]:biome===1?['83',0,48]:biome===2?['102',15,42]:w.hash(tx,ty)<.04?['111',0,36]:['83',8,30];props.push({tx,ty,sheet:spec[0],cell:spec[1],size:spec[2]});}
   props.push(...w.decorations.filter(p=>Math.floor(p.tx/64)===x&&Math.floor(p.ty/64)===y));w.chunks.set(key,{x,y,props});
  }
  for(const key of w.chunks.keys())if(!wanted.has(key))w.chunks.delete(key);

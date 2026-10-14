@@ -1,34 +1,39 @@
-import {artRefs} from './art-mappings.js?v=7.5.2';
-import {expeditionSheets,regionAt} from './expedition.js?v=7.5.2';
-import {confirmJourney} from './travel-ui.js?v=7.5.2';
-import {drawWildlife} from './wildlife.js?v=7.5.2';
-import {drawColossalWarnings} from './colossus.js?v=7.5.2';
-import {updateHazards,drawHazards} from './hazards.js?v=7.5.2';
-import {dungeonFloor,wallCell} from './terrain-art.js?v=7.5.2';
-import {underkeepAction,underkeepSheets} from './underkeep.js?v=7.5.2';
-import {presentEnding} from './ending.js?v=7.5.2';
-import {DebugSpeed} from './debug-speed.js?v=7.5.2';
-import {nearbyNPC} from './quests.js?v=7.5.2';
-import {openStory} from './story-ui.js?v=7.5.2';
-import {storyAction} from './story-dungeon.js?v=7.5.2';
-import {spriteUsage,coreSheets} from './sprite-usage.js?v=7.5.2';
-import {Adventure} from './adventure.js?v=7.5.2';
-import {reveal,nearbyLandmark} from './overworld.js?v=7.5.2';
-import {drawOverworld,drawFog,drawWorldMap} from './overworld-render.js?v=7.5.2';
-import {createDungeon,nearbyInteraction,interactDungeon,trapActive} from './dungeon.js?v=7.5.2';
-import {flipForAim} from './facing.js?v=7.5.2';
-import {AssetManager} from './assets.js?v=7.5.2';
-import {classes,art} from './data.js?v=7.5.2';
-import {TILE,direction} from './world.js?v=7.5.2';
-import {Combat,weapons,lineClear} from './combat.js?v=7.5.2';
-import {Progression,xpNeeded,colors} from './progression.js?v=7.5.2';
-import {openInventory} from './inventory.js?v=7.5.2';
+import {installSaveUI} from './save-ui.js?v=8.0.0';
+import {installDeveloperUI} from './developer-ui.js?v=8.0.0';
+import {readRecord} from './persistence.js?v=8.0.0';
+import {loadMap,requiredArtwork} from './tool-data.js?v=8.0.0';
+import {artRefs} from './art-mappings.js?v=8.0.0';
+import {expeditionSheets,regionAt} from './expedition.js?v=8.0.0';
+import {confirmJourney} from './travel-ui.js?v=8.0.0';
+import {drawWildlife} from './wildlife.js?v=8.0.0';
+import {drawColossalWarnings} from './colossus.js?v=8.0.0';
+import {updateHazards,drawHazards} from './hazards.js?v=8.0.0';
+import {dungeonFloor,wallCell} from './terrain-art.js?v=8.0.0';
+import {underkeepAction,underkeepSheets} from './underkeep.js?v=8.0.0';
+import {presentEnding} from './ending.js?v=8.0.0';
+import {DebugSpeed} from './debug-speed.js?v=8.0.0';
+import {nearbyNPC} from './quests.js?v=8.0.0';
+import {openStory} from './story-ui.js?v=8.0.0';
+import {storyAction} from './story-dungeon.js?v=8.0.0';
+import {spriteUsage,coreSheets} from './sprite-usage.js?v=8.0.0';
+import {Adventure} from './adventure.js?v=8.0.0';
+import {reveal,nearbyLandmark} from './overworld.js?v=8.0.0';
+import {drawOverworld,drawFog,drawWorldMap} from './overworld-render.js?v=8.0.0';
+import {createDungeon,nearbyInteraction,interactDungeon,trapActive} from './dungeon.js?v=8.0.0';
+import {flipForAim} from './facing.js?v=8.0.0';
+import {AssetManager} from './assets.js?v=8.0.0';
+import {classes,art} from './data.js?v=8.0.0';
+import {TILE,direction} from './world.js?v=8.0.0';
+import {Combat,weapons,lineClear} from './combat.js?v=8.0.0';
+import {Progression,xpNeeded,colors} from './progression.js?v=8.0.0';
+import {openInventory} from './inventory.js?v=8.0.0';
 
 const $=id=>document.getElementById(id),canvas=$('game'),g=canvas.getContext('2d');
 const assets=new AssetManager(),keys=new Set(),debugSpeed=new DebugSpeed();
 let world=createDungeon('Dunbarrow'),aimUntil=0,mapVisible=true;
+let saves=null;const devOptions={invincible:false,freezeAI:false,reveal:false};
 let selected=0,mode='selection',debug=false,animation=0,last=0,accumulator=0,fps=60;
-const player={...world.spawn,radius:8,flip:false};
+let player={...world.spawn,radius:8,flip:false};
 let combat=new Combat(world,player,classes[0]),attacking=false,dodgeRequested=false;
 let progression=new Progression(classes[0],player),toastTime=0,adventure=null;
 function notifyLoot(message){$('toast').textContent=message;$('toast').hidden=false;toastTime=3.5;}
@@ -39,7 +44,7 @@ function reportError(error){$('fatal').hidden=false;$('fatal').textContent='Game
 addEventListener('error',event=>reportError(event.error||new Error(event.message)));
 function showStory(npc=null){if(!adventure)return;setMode('story');openStory(adventure,npc,()=>setMode('playing'));}
 async function encounter(){
- if(mode!=='playing'||!adventure)return;const npc=nearbyNPC(adventure);if(npc){if(npc.id==='caravan'){await caravanTravel();return;}if(npc.id==='aldric'&&adventure.quests.heraldDefeated){adventure.quests.finished=true;presentEnding(adventure,$('completeSummary'));setMode('complete');return;}showStory(npc);return;}
+ if(mode!=='playing'||!adventure)return;if(adventure.sandbox){notifyLoot(adventure.interact());return;}const npc=nearbyNPC(adventure);if(npc){if(npc.id==='caravan'){await caravanTravel();return;}if(npc.id==='aldric'&&adventure.quests.heraldDefeated){adventure.quests.finished=true;presentEnding(adventure,$('completeSummary'));setMode('complete');return;}showStory(npc);return;}
  const destination=world.kind==='overworld'?nearbyLandmark(world,player):null;
  if(destination?.id==='caravan'||destination?.id==='outpost'){await caravanTravel();return;}
  if(destination?.legendary){const event=world.events.find(e=>e.id===destination.id);setMode('story');const remaining=Math.max(0,Math.ceil(event.expiresAt-adventure.elapsed));
@@ -73,9 +78,10 @@ let viewWidth=640,viewHeight=360;
 function resize(){const scale=innerWidth>=1000?2:1;canvas.width=Math.ceil(innerWidth/scale);canvas.height=Math.ceil(innerHeight/scale);viewWidth=canvas.width;viewHeight=canvas.height;g.imageSmoothingEnabled=false;}
 addEventListener('resize',resize);resize();
 function select(index){selected=index;document.querySelectorAll('.character').forEach((b,i)=>{b.classList.toggle('selected',i===index);b.setAttribute('aria-pressed',String(i===index));});const c=classes[index];$('chosenName').textContent=c.name;$('chosenStats').textContent=`${c.style} · ${c.hp} health · ${c.speed} speed · ${c.attack} power · ${c.defense} defense · ${weapons[index].special}`;}
-function setMode(next){mode=next;keys.clear();attacking=false;dodgeRequested=false;accumulator=0;$('selection').hidden=next!=='selection';$('pause').hidden=next!=='paused';$('result').hidden=next!=='dead';$('complete').hidden=next!=='complete';$('hud').hidden=next==='selection';$('debug').hidden=!debug||next==='selection';if(next==='playing')canvas.focus();}
+function setMode(next){if(next!==mode&&['dead','complete'].includes(next)&&adventure)saves?.ended(adventure);mode=next;keys.clear();attacking=false;dodgeRequested=false;accumulator=0;$('selection').hidden=next!=='selection';$('pause').hidden=next!=='paused';$('result').hidden=next!=='dead';$('complete').hidden=next!=='complete';$('hud').hidden=next==='selection';$('debug').hidden=!debug||next==='selection';if(next==='playing')canvas.focus();}
 function reset(){Object.assign(player,world.spawn,{flip:false});Object.assign(camera,world.spawn);}
-function begin(){debugSpeed.reset();adventure=new Adventure($('seed').value.trim()||'Dunbarrow',classes[selected],player,notifyLoot,$('difficulty').value);world=adventure.world;combat=adventure.combat;progression=adventure.progression;Object.assign(camera,player);$('heroName').textContent=classes[selected].name;syncVitals();aimUntil=0;setMode('playing');notifyLoot('Welcome to Dunbarrow. Speak with Aldric northwest of the campfire. J opens your journal; E talks or interacts.');}
+function begin(){if(saves&&!saves.confirmNew())return;startAdventure();}
+function startAdventure(){debugSpeed.reset();debug=false;Object.assign(devOptions,{invincible:false,freezeAI:false,reveal:false});adventure=new Adventure($('seed').value.trim()||'Dunbarrow',classes[selected],player,notifyLoot,$('difficulty').value);adventure.runId=crypto.randomUUID();world=adventure.world;combat=adventure.combat;progression=adventure.progression;Object.assign(camera,player);$('heroName').textContent=classes[selected].name;syncVitals();aimUntil=0;setMode('playing');notifyLoot('Welcome to Dunbarrow. Speak with Aldric northwest of the campfire. J opens your journal; E talks or interacts.');}
 $('begin').onclick=begin;$('pauseButton').onclick=()=>setMode('paused');$('resume').onclick=()=>setMode('playing');$('reset').onclick=()=>{reset();setMode('playing');};$('change').onclick=()=>setMode('selection');
 $('reset').textContent='Restart this seed';$('reset').onclick=begin;
 $('retry').onclick=begin;$('resultChange').onclick=()=>setMode('selection');
@@ -90,7 +96,7 @@ $('story').addEventListener('close',()=>{if(mode==='story')setMode('playing');})
 $('gear').addEventListener('close',()=>{if(mode==='inventory')setMode('playing');});
 const movementCodes=['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowLeft','ArrowDown','ArrowRight'];
 addEventListener('keydown',e=>{
-  if($('info').open||$('gear').open||$('story').open)return;
+  if(document.querySelector('dialog[open]'))return;
   if(e.code==='F4'&&!e.repeat&&mode!=='selection'){e.preventDefault();if(e.shiftKey)debugSpeed.cycle();else debugSpeed.toggle();return;}
   if(e.code==='KeyJ'&&!e.repeat&&['playing','paused'].includes(mode)){showStory();return;}
   if(['playing','paused'].includes(mode)&&!e.repeat&&['KeyI','KeyC','Digit1','Numpad1'].includes(e.code)){e.preventDefault();if(['Digit1','Numpad1'].includes(e.code))drinkPotion();else showGear(e.code==='KeyC');return;}
@@ -111,7 +117,7 @@ $('assetsButton').onclick=()=>{
   $('infoBody').innerHTML+='<h3>Audited cell uses (zero-based)</h3><p>'+spriteUsage.map(u=>`${u.sheet}.${u.cell}: ${u.label||u.use} — ${u.use}`).join('<br>')+'</p>';
   for(const error of assets.errors){const p=document.createElement('p');p.textContent=error;$('infoBody').append(p);}$('info').showModal();
 };
-function simulate(dt){adventure.elapsed+=dt;adventure.tick(dt);const d=direction(keys);const mx=pointer.x*viewWidth/innerWidth-viewWidth/2+camera.x,my=pointer.y*viewHeight/innerHeight-viewHeight/2+camera.y;combat.update(dt,{...d,angle:Math.atan2(my-(player.y-13),mx-player.x),aiming:performance.now()<aimUntil,attack:attacking,dodge:dodgeRequested,moveMultiplier:debugSpeed.value});dodgeRequested=false;updateHazards(adventure,dt,d);if(world.kind==='overworld')reveal(world,player);else if(world.theme){world.explored??=new Set();const tx=Math.floor(player.x/32),ty=Math.floor(player.y/32);for(let dy=-7;dy<=7;dy++)for(let dx=-7;dx<=7;dx++){const x=tx+dx,y=ty+dy;if(x>=0&&y>=0&&x<world.width&&y<world.height)world.explored.add(y*world.width+x);}const plate=world.objects.find(o=>o.kind==='plate'&&Math.hypot(o.x-player.x,o.y-player.y)<20);if(plate&&!plate.active){plate.active=true;world.ritual.plate=true;notifyLoot('Pressure plate latched. Find the lever next.');}} for(const trap of world.traps)if(trapActive(trap,combat.time)&&Math.hypot(player.x-trap.x,player.y-trap.y)<17)combat.hurt(15*(world.difficulty==='nightmare'?1.3:world.difficulty==='veteran'?1.15:world.difficulty==='explorer'?.75:1),trap);const blend=1-Math.exp(-9*dt);camera.x+=(player.x-camera.x)*blend;camera.y+=(player.y-camera.y)*blend;animation+=dt;
+function simulate(dt){combat.invincible=devOptions.invincible;combat.freezeAI=devOptions.freezeAI;adventure.elapsed+=dt;adventure.tick(dt);const d=direction(keys);const mx=pointer.x*viewWidth/innerWidth-viewWidth/2+camera.x,my=pointer.y*viewHeight/innerHeight-viewHeight/2+camera.y;combat.update(dt,{...d,angle:Math.atan2(my-(player.y-13),mx-player.x),aiming:performance.now()<aimUntil,attack:attacking,dodge:dodgeRequested,moveMultiplier:debugSpeed.value});dodgeRequested=false;updateHazards(adventure,dt,d);if(world.kind==='overworld')reveal(world,player);else if(world.theme){world.explored??=new Set();const tx=Math.floor(player.x/32),ty=Math.floor(player.y/32);for(let dy=-7;dy<=7;dy++)for(let dx=-7;dx<=7;dx++){const x=tx+dx,y=ty+dy;if(x>=0&&y>=0&&x<world.width&&y<world.height)world.explored.add(y*world.width+x);}const plate=world.objects.find(o=>o.kind==='plate'&&Math.hypot(o.x-player.x,o.y-player.y)<20);if(plate&&!plate.active){plate.active=true;world.ritual.plate=true;notifyLoot('Pressure plate latched. Find the lever next.');}} for(const trap of world.traps)if(trapActive(trap,combat.time)&&Math.hypot(player.x-trap.x,player.y-trap.y)<17)combat.hurt(15*(world.difficulty==='nightmare'?1.3:world.difficulty==='veteran'?1.15:world.difficulty==='explorer'?.75:1),trap);const blend=1-Math.exp(-9*dt);camera.x+=(player.x-camera.x)*blend;camera.y+=(player.y-camera.y)*blend;animation+=dt;
  const picked=progression.collect(player,(a,b)=>lineClear(world,a,b));if(picked.length)notifyLoot(`Collected ${picked.map(i=>i.name).join(', ')} · I to equip${progression.points?' · C: improvement available':''}`);
  toastTime-=dt;if(toastTime<=0)$('toast').hidden=true;
  $('healthText').textContent=`${player.hp} / ${progression.stats.hp} HP`;document.querySelector('.health span').style.width=`${player.hp/progression.stats.hp*100}%`;
@@ -170,20 +176,29 @@ function render(){
   for(const q of combat.projectiles){const x=Math.round(q.x+ox),y=Math.round(q.y+oy);g.save();g.translate(x,y);g.rotate(q.angle);if(q.kind==='bomb')assets.draw(g,'88',7,-8,-8,16,16);else if(q.kind==='magic')assets.draw(g,'100',q.team==='enemy'?12:2,-9,-9,18,18);else{g.fillStyle=q.team==='enemy'?'#f58b62':'#e3d4a8';g.fillRect(-8,-1,14,2);g.fillRect(4,-3,3,6);}g.restore();}
   for(const e of combat.effects){g.save();g.translate(Math.round(e.x+ox),Math.round(e.y+oy));g.rotate(e.angle);g.globalAlpha=Math.min(1,e.ttl*8);assets.draw(g,e.sheet,e.cell+(e.ttl<e.duration/2?1:0),-e.size/2,-e.size/2,e.size,e.size);g.restore();}
   for(const n of combat.numbers){g.globalAlpha=Math.min(1,n.ttl*3);g.font='bold 11px monospace';g.textAlign='center';g.fillStyle='#101316';g.fillText(n.text,Math.round(n.x+ox)+1,Math.round(n.y+oy)+1);g.fillStyle=n.color;g.fillText(n.text,Math.round(n.x+ox),Math.round(n.y+oy));}g.globalAlpha=1;g.textAlign='start';
-  if(outdoors)drawFog(g,world,player,bounds,ox,oy);
+  if(outdoors&&!devOptions.reveal)drawFog(g,world,player,bounds,ox,oy);
   if(debug){g.strokeStyle='#8effb4';g.strokeRect(Math.round(player.x-8+ox)+.5,Math.round(player.y-8+oy)+.5,16,16);$('debug').textContent=`COMBAT · fixed 60 Hz\nSeed: ${world.seed}\nRegion: ${outdoors?'Dunbarrow / chunks loaded: '+world.chunks.size:world.name}\nPosition: ${player.x.toFixed(1)}, ${player.y.toFixed(1)}\nFPS: ${Math.round(fps)} · living enemies: ${combat.enemies.filter(e=>e.hp>0).length}\nCollision: 16 × 16 feet box\nQuest: ${adventure?.quests.objective||'selection'}\nIdle frame: ${Math.floor(animation/.42)%2?'B':'A'} (420 ms)`;}
   const boss=combat.enemies.find(e=>e.boss&&e.hp>0&&Math.hypot(e.x-player.x,e.y-player.y)<400);if(boss){g.fillStyle='#17121ee8';g.fillRect(viewWidth/2-130,45,260,25);g.fillStyle='#ad6688';g.fillRect(viewWidth/2-126,62,252*boss.hp/boss.maxHp,4);g.fillStyle='#ffe0bd';g.font='10px monospace';g.fillText(boss.name+(boss.finalBoss?' · PHASE '+(boss.phase||1):''),viewWidth/2-110,57);}
   if(mapVisible&&outdoors)drawWorldMap(g,world,player,viewHeight);
   if(mapVisible&&!outdoors){const scale=2,mx=12,my=viewHeight-world.height*scale-32;g.fillStyle='#071014e8';g.fillRect(mx-4,my-4,world.width*scale+8,world.height*scale+8);for(let y=0;y<world.height;y++)for(let x=0;x<world.width;x++)if(!world.solid[y*world.width+x]&&(!world.theme||world.explored?.has(y*world.width+x))){g.fillStyle='#65736b';g.fillRect(mx+x*scale,my+y*scale,scale,scale);}for(const d of world.doors){if(world.theme&&!world.explored?.has(d.y*world.width+d.x))continue;g.fillStyle=d.open?'#65736b':'#dbaf70';g.fillRect(mx+d.x*scale,my+d.y*scale,2,2);}for(const [p,color] of [[world.exit,'#d498ff'],[world.spawn,'#80dcdb'],...(!world.key.taken?[[world.key,'#ffd45b']]:[]),[player,'#ffffff']]){if(world.theme&&!world.explored?.has(Math.floor(p.y/32)*world.width+Math.floor(p.x/32)))continue;g.fillStyle=color;g.fillRect(mx+p.x/TILE*scale-2,my+p.y/TILE*scale-2,4,4);}g.fillStyle='#d9ddcf';g.font='8px monospace';g.fillText('M: MAP · gold key / violet exit',mx,my-9);}
 }
 function drawPreviews(time){document.querySelectorAll('.character canvas').forEach((c,i)=>{const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#080f1230';ctx.beginPath();ctx.ellipse(48,85,24,5,0,0,Math.PI*2);ctx.fill();assets.character(ctx,i*2+Math.floor(time/420)%2,48,86,70);});}
-function frame(now){const elapsed=Math.min((now-last)/1000||0,0.1);last=now;fps+=(1/(elapsed||1/60)-fps)*.05;if(mode==='playing'){accumulator+=elapsed;while(accumulator>=1/60){simulate(1/60);accumulator-=1/60;}}else accumulator=0;render();if(mode==='selection')drawPreviews(now);requestAnimationFrame(frame);}
+function frame(now){const elapsed=Math.min((now-last)/1000||0,0.1);last=now;fps+=(1/(elapsed||1/60)-fps)*.05;if(mode==='playing'){accumulator+=elapsed;while(accumulator>=1/60&&mode==='playing'){accumulator-=1/60;simulate(1/60);}}else accumulator=0;render();if(mode==='selection')drawPreviews(now);requestAnimationFrame(frame);}
+async function loadArtwork(ids){await assets.load(()=>{},ids);const missing=ids.filter(id=>!assets.atlases.has(id));if(missing.length)throw Error('Missing artwork: '+missing.join(', ')+'. Your saved adventure is unchanged.');}
+function restoreRun(a,hero){adventure=a;player=a.player;progression=a.progression;select(hero);$('seed').value=a.seed;$('difficulty').value=a.difficulty;debugSpeed.reset();debug=false;Object.assign(devOptions,{invincible:false,freezeAI:false,reveal:false});syncRegion();syncVitals();$('heroName').textContent=classes[hero].name+(a.sandbox?' · DEVELOPER PREVIEW':'');$('fatal').hidden=true;}
+saves=installSaveUI({state:()=>({adventure,mode}),mode:setMode,notice:notifyLoot,loadArt:loadArtwork,restore:restoreRun,replay:a=>{$('seed').value=a.seed;$('difficulty').value=a.difficulty;select(a.progression.base.id);startAdventure();}});
+installDeveloperUI({mode:()=>mode,pause:setMode,get:key=>key==='overlay'?debug:devOptions[key],set:(key,value)=>{if(key==='overlay'){debug=value;$('debug').hidden=!value||mode==='selection';}else devOptions[key]=value;}});
+async function openDeveloperPreview(){
+ if(new URLSearchParams(location.search).get('preview')!=='1')return;
+ try{const file=await readRecord('developer-map');if(!file)throw Error('No exported preview map is available. Open a development tool first.');const preview=loadMap(file),a=new Adventure(preview.seed,classes[0],{},notifyLoot,preview.difficulty||'adventurer');a.sandbox=true;a.travel('developer-preview',preview,preview.spawn,true);await loadArtwork(requiredArtwork(a));restoreRun(a,0);setMode('paused');notifyLoot('Developer preview. Campaign saves are protected.');}catch(error){notifyLoot(error.message);}history.replaceState(null,'',location.pathname);
+}
 try {
   await assets.load((done,total)=>$('loading').textContent=`Loading supplied sheets · ${done} / ${total}`);
   for(const c of classes){const b=document.createElement('button');b.className='character';b.setAttribute('aria-label',c.name);b.innerHTML=`<span class="number">0${c.id+1}</span><canvas width="96" height="96"></canvas><span class="name">${c.name}</span>`;b.onclick=()=>select(c.id);$('characters').append(b);}
   select(0);
   const ready=coreSheets.every(id=>assets.atlases.has(id));$('begin').disabled=!ready;
   $('loading').textContent=assets.errors.length?`${assets.errors.length} sheet(s) unavailable — open Asset report${ready?'':'. Required combat art is missing.'}`:'Core artwork loaded · 111 sheets registered · Regions load on demand';
+  await openDeveloperPreview();
   requestAnimationFrame(frame);
 }catch(error){$('fatal').hidden=false;$('fatal').textContent=`Unable to start: ${error.message}. Run the local server and open /game/.`;}
 // Read-only inspection for acceptance tests and future development tools.

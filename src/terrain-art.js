@@ -1,4 +1,4 @@
-import {noise} from './geography.js?v=7.5.2';
+import {noise} from './geography.js?v=8.0.0';
 const groundCells=[[0,2,3,4,6,7,12,13,15],[0,1,2,3,6,7,8,9,10,11,12,13,14,15],[0,1,2,3,4,5,7,12,13,14,15],[0,1,13,14,15]];
 export function outdoorTile(w,x,y){
  const i=y*w.width+x,t=w.terrain[i];

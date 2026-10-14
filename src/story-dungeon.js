@@ -1,6 +1,6 @@
-import {hashSeed,spawnMonster} from './monsters.js?v=7.5.2';
-import {directEncounter} from './encounters.js?v=7.5.2';
-import {canOccupy} from './world.js?v=7.5.2';
+import {hashSeed,spawnMonster} from './monsters.js?v=8.0.0';
+import {directEncounter} from './encounters.js?v=8.0.0';
+import {canOccupy} from './world.js?v=8.0.0';
 export function createStoryDungeon(seed,theme,level=1,progress=0,difficulty='adventurer'){
  let rng=hashSeed(seed+theme);const random=()=>{rng=(Math.imul(rng,1664525)+1013904223)>>>0;return rng/4294967296;};
  const chapel=theme==='chapel',mainCount=chapel?7:6,width=80,height=60;

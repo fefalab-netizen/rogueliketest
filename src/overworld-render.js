@@ -1,6 +1,6 @@
-import {artRefs} from './art-mappings.js?v=7.5.2';
-import {outdoorTile} from './terrain-art.js?v=7.5.2';
-import {TILE} from './world.js?v=7.5.2';
+import {artRefs} from './art-mappings.js?v=8.0.0';
+import {outdoorTile} from './terrain-art.js?v=8.0.0';
+import {TILE} from './world.js?v=8.0.0';
 const mapCache=new WeakMap();
 export function drawOverworld(g,assets,w,p,bounds,ox,oy,sprites){
  const {minX,maxX,minY,maxY}=bounds;

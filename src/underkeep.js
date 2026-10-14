@@ -1,6 +1,6 @@
-import {directEncounter} from './encounters.js?v=7.5.2';
-import {createStoryDungeon,storyAction,interactStory} from './story-dungeon.js?v=7.5.2';
-import {hashSeed} from './monsters.js?v=7.5.2';
+import {directEncounter} from './encounters.js?v=8.0.0';
+import {createStoryDungeon,storyAction,interactStory} from './story-dungeon.js?v=8.0.0';
+import {hashSeed} from './monsters.js?v=8.0.0';
 
 export const floorNames=['Gate Halls','Broken Barracks','Sealed Sanctum'];
 export const underkeepSheets=['64','66','67','68','69','70'];
