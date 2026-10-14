@@ -1,5 +1,5 @@
-import {difficultyFor} from './difficulty.js?v=7.5.2';
-import {move} from './world.js?v=7.5.2';
+import {difficultyFor} from './difficulty.js?v=8.0.0';
+import {move} from './world.js?v=8.0.0';
 const cell=(w,p)=>Math.floor(p.y/32)*w.width+Math.floor(p.x/32);
 export function updateHazards(a,dt,input){
  const w=a.world,p=a.player,c=a.combat;if(!w.expedition)return;

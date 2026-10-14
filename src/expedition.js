@@ -1,6 +1,6 @@
-import {hashSeed} from './monsters.js?v=7.5.2';
-import {noise,clearDisk,trail,repairOutdoorRoutes,safePosition} from './geography.js?v=7.5.2';
-import {directEncounter} from './encounters.js?v=7.5.2';
+import {hashSeed} from './monsters.js?v=8.0.0';
+import {noise,clearDisk,trail,repairOutdoorRoutes,safePosition} from './geography.js?v=8.0.0';
+import {directEncounter} from './encounters.js?v=8.0.0';
 export const regions=[
  {id:'volcano',name:'Volcanic Wastes',sheet:'103',enemySheet:'16',color:'#a46643',center:[64,64],boss:[29,32],bossId:'juggernaut',pool:['imp','emberhound','lava','brimstone'],warning:'Lava never cools. Amber circles mark vents about to erupt.'},
  {id:'jungle',name:'Deep Jungle',sheet:'105',enemySheet:'22',color:'#668549',center:[190,63],boss:[225,29],bossId:'matron',pool:['panther','rootboar','serpent','junglehunter'],warning:'Purple pools poison; roots stir before they grasp. Keep a clear retreat.'},

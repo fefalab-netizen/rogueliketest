@@ -1,4 +1,4 @@
-import {auditedLabels} from './sprite-labels.js?v=7.5.2';
+import {auditedLabels} from './sprite-labels.js?v=8.0.0';
 export const classes = [
   ['Dwarf Axeman','The stone oath','Durable axe fighter',130,112,16,8],
   ['Silver Knight','The last watch','Balanced sword fighter',120,120,14,10],
@@ -11,7 +11,7 @@ export const classes = [
 ].map(([name,title,style,hp,speed,attack,defense],index)=>({id:index,name,title,style,hp,speed,attack,defense,frames:[index*2,index*2+1]}));
 
 // Physical file IDs are deliberately independent of the planned semantic set numbers.
-export const sheets = Array.from({length:111},(_,i)=>i+1).map(n=>({id:String(n).padStart(2,'0'),path:`assets/${String(n).padStart(2,'0')}.png`,character:auditedLabels[String(n).padStart(2,'0')]?.every((label,i)=>label.endsWith(i%2?'[B]':'[A]'))||false}));
+export const sheets = Array.from({length:111},(_,i)=>i+1).map(n=>({id:String(n).padStart(2,'0'),path:new URL(`../assets/${String(n).padStart(2,'0')}.png`,import.meta.url).href,character:auditedLabels[String(n).padStart(2,'0')]?.every((label,i)=>label.endsWith(i%2?'[B]':'[A]'))||false}));
 export const spriteRegistry = Object.fromEntries(sheets.flatMap(s=>Array.from({length:16},(_,cell)=>[
   `${s.id}.r${Math.floor(cell/4)+1}c${cell%4+1}`,{sheet:s.id,cell,label:auditedLabels[s.id]?.[cell]||''}
 ])));

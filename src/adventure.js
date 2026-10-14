@@ -1,14 +1,15 @@
-import {createExpedition,regions as wildRegions,updateEvents} from './expedition.js?v=7.5.2';
-import {createLegendary,resolveEvent} from './legendary.js?v=7.5.2';
-import {populateWildlife,updateWildlife} from './wildlife.js?v=7.5.2';
-import {safePosition,prepareDungeon} from './geography.js?v=7.5.2';
-import {createUnderkeep,interactUnderkeep} from './underkeep.js?v=7.5.2';
-import {createStoryDungeon,interactStory} from './story-dungeon.js?v=7.5.2';
-import {Quests,campNPCs} from './quests.js?v=7.5.2';
-import {createOverworld,nearbyLandmark} from './overworld.js?v=7.5.2';
-import {createDungeon,interactDungeon} from './dungeon.js?v=7.5.2';
-import {Combat} from './combat.js?v=7.5.2';
-import {Progression} from './progression.js?v=7.5.2';
+import {warnWilderness} from './dunbarrow-danger.js?v=8.0.0';
+import {createExpedition,regions as wildRegions,updateEvents} from './expedition.js?v=8.0.0';
+import {createLegendary,resolveEvent} from './legendary.js?v=8.0.0';
+import {populateWildlife,updateWildlife} from './wildlife.js?v=8.0.0';
+import {safePosition,prepareDungeon} from './geography.js?v=8.0.0';
+import {createUnderkeep,interactUnderkeep} from './underkeep.js?v=8.0.0';
+import {createStoryDungeon,interactStory} from './story-dungeon.js?v=8.0.0';
+import {Quests,campNPCs} from './quests.js?v=8.0.0';
+import {createOverworld,nearbyLandmark} from './overworld.js?v=8.0.0';
+import {createDungeon,interactDungeon} from './dungeon.js?v=8.0.0';
+import {Combat} from './combat.js?v=8.0.0';
+import {Progression} from './progression.js?v=8.0.0';
 
 // Region state survives travel: enemies, doors, loot and chests are not regenerated.
 export class Adventure {
@@ -21,15 +22,20 @@ export class Adventure {
   if(this.current)this.current.drops=pr.drops;
   let region=this.regions.get(id);
   if(!region){world.difficulty=this.difficulty;if(world.kind==='overworld')populateWildlife(world);else prepareDungeon(world);const combat=new Combat(world,p,pr.stats);combat.randomState=world.numericSeed||1;combat.start();combat.onNotice=this.onNotice;if(world.depth===2)for(const e of combat.enemies)e.faction='underkeep';region={world,combat,drops:[]};this.regions.set(id,region);
+   this.bindCombat(region);
+  }
+  this.current=region;this.regionId=id;position=safePosition(world,position,8)||world.spawn;pr.drops=region.drops;Object.assign(p,position,{hp:first?pr.stats.hp:hp,xp,angle:0,flip:true,flash:0,invulnerable:0,dodge:0,cooldown:0,dodgeCooldown:0,root:0,slow:0,burn:0,poison:0,slideX:0,slideY:0});
+  region.combat.projectiles=[];region.combat.effects=[];region.combat.numbers=[];pr.wave=world.legendary?5:world.expedition?3:world.depth?world.depth*2+1:1;
+ }
+ bindCombat(region){
+  const {world,combat}=region,pr=this.progression;combat.onNotice=this.onNotice;
+  if(this.sandbox){combat.onDefeat=enemy=>{if(enemy.boss)world.bossDefeated=true;if(!enemy.noLoot)pr.drop(enemy);pr.gainXP(enemy.xp);if(!world.previewRewardClaimed&&combat.enemies.every(e=>e.hp<=0)){world.previewRewardClaimed=true;pr.addGold(world.previewReward?.gold||0);pr.potions+=world.previewReward?.potions||0;this.onNotice('Preview encounter cleared. Reward granted in this preview only.');}};return;}
    combat.onDefeat=(enemy)=>{this.totalKills=(this.totalKills||0)+1;if(!enemy.noLoot)pr.drop(enemy,this.totalKills);if(enemy.finalBoss){
     world.bossDefeated=true;this.quests.heraldDefeated=true;this.quests.artifacts.add('Heart of the Underkeep');
     for(const e of combat.enemies)if(e.summoner===enemy.id){e.hp=0;e.state='dead';}enemy.runes=[];combat.projectiles=[];world.traps=[];
     const reward=pr.makeItem('trinket',true);Object.assign(reward,{name:'Heartward Seal',rarity:3,stats:{crit:.12,haste:.2,hp:30}});pr.items.push(reward);pr.addGold(150);pr.potions+=3;
     this.onNotice('The First Herald falls. The Heart of the Underkeep is yours. Use the exit to return to Dunbarrow, then speak with Aldric.');
    }else if(enemy.colossal){world.defeatedColossi??=[];if(!world.defeatedColossi.includes(enemy.species)){world.defeatedColossi.push(enemy.species);const item=pr.namedReward(enemy.species);pr.addGold(65);this.quests.lore.add(enemy.name+' defeated.');this.onNotice(enemy.name+' falls. '+item.name+' recovered.');}}else if(world.legendary&&enemy.optionalBoss){world.bossDefeated=true;if(!world.rewardClaimed){world.rewardClaimed=true;const event=this.regions.get('expedition').world.events.find(e=>e.id===world.eventId),item=event.type==='one-attempt'?pr.namedReward('covenant'):pr.makeItem('weapon',true,3);if(event.type!=='one-attempt')pr.items.push(item);pr.addGold(60);pr.potions+=2;this.onNotice(world.name+' conquered. '+item.name+' earned.');}}else if(enemy.boss){world.bossDefeated=true;const message=this.quests.claim(world.theme,pr);if(message)this.onNotice(message);}if(pr.gainXP(enemy.xp))this.onNotice(`Level ${pr.level}! Press C to improve your stats.`);};
-  }
-  this.current=region;this.regionId=id;position=safePosition(world,position,8)||world.spawn;pr.drops=region.drops;Object.assign(p,position,{hp:first?pr.stats.hp:hp,xp,angle:0,flip:true,flash:0,invulnerable:0,dodge:0,cooldown:0,dodgeCooldown:0,root:0,slow:0,burn:0,poison:0,slideX:0,slideY:0});
-  region.combat.projectiles=[];region.combat.effects=[];region.combat.numbers=[];pr.wave=world.legendary?5:world.expedition?3:world.depth?world.depth*2+1:1;
  }
  enterUnderkeep(depth,fromBelow=false){
   const id='underkeep-'+depth,w=this.regions.get(id)?.world||createUnderkeep(this.seed,depth,this.difficulty);
@@ -56,6 +62,7 @@ export class Adventure {
   const w=this.regions.get(event.id)?.world||createLegendary(this,event);this.travel(event.id,w,w.spawn);event.entered=true;event.discovered=true;return event.name+' · '+(event.type==='one-attempt'?'Leaving or dying closes this entrance.':'Progress remains if you retreat.');
  }
  tick(dt){
+  warnWilderness(this,dt);
   updateEvents(this);if(this.world.kind==='overworld')updateWildlife(this.world,this.combat,dt);
   const w=this.world;if(w.expedition&&Math.hypot(this.player.x-w.spawn.x,this.player.y-w.spawn.y)>w.safeZone.radius){
    const index=w.biomes[Math.floor(this.player.y/32)*w.width+Math.floor(this.player.x/32)];w.visitedRegions??=[];
@@ -67,6 +74,11 @@ export class Adventure {
  get combat(){return this.current.combat;}
  interact(){
   const p=this.player,w=this.world,pr=this.progression;
+  if(this.sandbox){
+   if(w.kind==='overworld')return 'Developer preview. Use Escape to leave; campaign travel is disabled here.';
+   const result=w.depth?interactUnderkeep(w,p,pr,this.quests):w.theme?interactStory(w,p,pr,this.quests):interactDungeon(w,p,pr,this.combat.finished);
+   return ['entrance','complete','ascend','descend','escape'].includes(result)?'Preview exit reached. Use Escape to return to the menu.':result;
+  }
   if(w.expedition){
    const l=nearbyLandmark(w,p);if(!l)return 'The marked trails connect all four regions. Return to the Outpost for free passage home.';
    if(l.cache){if(l.claimed)return 'These supplies have already been recovered.';const threats=this.combat.enemies.some(e=>e.hp>0&&Math.hypot(e.x-l.x,e.y-l.y)<220);if(threats)return 'Drive off the creatures guarding these supplies first.';l.claimed=true;pr.addGold(18);pr.potions++;return 'Recovered 18 gold and a healing potion.';}

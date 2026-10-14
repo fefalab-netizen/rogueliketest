@@ -1,4 +1,4 @@
-import {canOccupy} from './world.js?v=7.5.2';
+import {canOccupy} from './world.js?v=8.0.0';
 export function noise(seed,x,y){
  const hash=(a,b)=>{let n=Math.imul(a+seed,374761393)^Math.imul(b,668265263);n=Math.imul(n^(n>>>13),1274126177);return (n>>>0)/4294967296;};
  const ix=Math.floor(x),iy=Math.floor(y),smooth=t=>t*t*(3-2*t),u=smooth(x-ix),v=smooth(y-iy);

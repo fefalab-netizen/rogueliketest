@@ -1,8 +1,9 @@
-import {updateColossus} from './colossus.js?v=7.5.2';
-import {difficultyFor} from './difficulty.js?v=7.5.2';
-import {updateHerald} from './herald.js?v=7.5.2';
-import {move,canOccupy} from './world.js?v=7.5.2';
-import {spawnMonster} from './monsters.js?v=7.5.2';
+import {distanceFromRoad} from './dunbarrow-danger.js?v=8.0.0';
+import {updateColossus} from './colossus.js?v=8.0.0';
+import {difficultyFor} from './difficulty.js?v=8.0.0';
+import {updateHerald} from './herald.js?v=8.0.0';
+import {move,canOccupy} from './world.js?v=8.0.0';
+import {spawnMonster} from './monsters.js?v=8.0.0';
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export function tactics(e,enemies){
  const allies=enemies.filter(a=>a!==e&&a.hp>0&&a.faction===e.faction&&dist(a,e)<260);
@@ -19,15 +20,24 @@ function summon(c,e){
  }return false;
 }
 export function updateEnemy(c,e,dt,clear){
+ if(c.freezeAI)return;
  if(e.colossal){updateColossus(c,e,dt,clear);return;}
  if(e.finalBoss){updateHerald(c,e,dt,clear);return;}
  const p=c.player,w=c.world,d=dist(e,p);
+ // Wilderness packs defend a bounded territory and yield the established roads.
+ if(e.packId!==undefined&&(distanceFromRoad(w,p)<=4||dist(p,e.territory)>e.territory.radius||dist(e,e.territory)>e.territory.radius||e.returningToPack)){
+  e.returningToPack=dist(e,e.post)>24;e.alert=false;e.action=null;e.mark=null;e.state='return';e.cooldown=Math.max(e.cooldown,.6);e.pathTimer-=dt;
+  if(e.returningToPack)navigate(c,e,e.post,dt,clear,.85);
+  else {e.state='idle';e.waypoint=null;e.pathTimer=0;}
+  return;
+ }
  if(w.kind==='overworld'&&(d>640||dist(p,w.safeZone)<w.safeZone.radius)){e.state='idle';e.alert=false;return;}
  for(const k of ['cooldown','flash','slow','ward','abilityCooldown'])e[k]=Math.max(0,(e[k]||0)-dt);
  e.pathTimer-=dt;e.tacticalTimer-=dt;
  if(e.tacticalTimer<=0){e.tactics=tactics(e,c.enemies);e.tacticalTimer=.65/difficultyFor(w).coordination;}
  const visible=clear(w,e,p),notice=e.role==='ambusher'?105:e.detection;
  if(d<notice&&visible)e.alert=true;
+ if(e.packId!==undefined&&!e.alert&&e.tactics.allies.some(a=>a.alert&&a.packId===e.packId))e.alert=true;
  if(!e.alert&&c.noise&&dist(e,c.noise)<210&&c.noise.until>c.time){e.state='investigate';e.investigate={x:c.noise.x,y:c.noise.y};e.timer=3;}
  if(!e.alert&&e.tactics.allies.some(a=>a.alert&&dist(a,e)<140*difficultyFor(w).coordination)&&d<340){e.state='alert';e.alert=true;}
  if(e.alert&&d>520){e.alert=false;e.state='return';}
